@@ -1,7 +1,7 @@
 const delimiter = "|";
 
 function buildString(type, parameter) {
-	return type + delimiter + parameter;
+  return type + delimiter + parameter;
 }
 
 function join(str1, str2) {
