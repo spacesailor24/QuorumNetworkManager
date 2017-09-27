@@ -60,3 +60,6 @@ Constellation/node*
 
 # CommunicationNode
 CommunicationNode/
+
+# Tests
+test/node*

@@ -10,6 +10,7 @@ let statistics = require('./networkStatistics.js')
 let peerHandler = require('./peerHandler.js')
 let fundingHandler = require('./fundingHandler.js')
 let ports = require('./config.js').ports
+let setup = require('./config.js').setup
 
 prompt.start()
 
@@ -47,22 +48,36 @@ function createStaticNodeFile(enodeList, cb){
 }
 
 function getConfiguration(result, cb){
-  console.log('Please wait for others to join. Hit any key + enter once done.')
-  prompt.get(['done'] , function (err, answer) {
-    if(result.communicationNetwork){
-      result.enodeList = result.enodeList.concat(result.communicationNetwork.enodeList) 
-    }
+  if(setup.automatedSetup){
+    if(setup.enodeList){
+      result.enodeList = result.enodeList.concat(setup.enodeList) 
+    } 
     createStaticNodeFile(result.enodeList, function(err, res){
       result.communicationNetwork.staticNodesFileReady = true
       cb(err, result)
     })
-  })
+  } else {
+    console.log('Please wait for others to join. Hit any key + enter once done.')
+    prompt.get(['done'] , function (err, answer) {
+      if(result.communicationNetwork && result.communicationNetwork.enodeList){
+        result.enodeList = result.enodeList.concat(result.communicationNetwork.enodeList) 
+      }
+      createStaticNodeFile(result.enodeList, function(err, res){
+        result.communicationNetwork.staticNodesFileReady = true
+        cb(err, result)
+      })
+    })
+  }
 }
 
 function addAddresslistToQuorumConfig(result, cb){
   result.blockMakers = result.addressList
   result.blockVoters = result.addressList
-  if(result.communicationNetwork){
+  if(setup.automatedSetup && setup.automatedSetup.addressList){
+    result.blockMakers = result.blockMakers.concat(setup.automatedSetup.addressList) 
+    result.blockVoters = result.blockVoters.concat(setup.automatedSetup.addressList) 
+  } 
+  if(result.communicationNetwork && result.communicationNetwork.addressList){
     result.blockMakers = result.blockMakers.concat(result.communicationNetwork.addressList) 
     result.blockVoters = result.blockVoters.concat(result.communicationNetwork.addressList) 
   }
@@ -112,21 +127,7 @@ function handleNetworkConfiguration(result, cb){
 function startNewRaftNetwork(config, cb){
   console.log('[*] Starting new node...')
 
-  let seqFunction = async.seq(
-    handleExistingFiles,
-    whisper.StartCommunicationNetwork,
-    handleNetworkConfiguration,
-    startRaftNode,
-    util.CreateWeb3Connection,
-    whisper.AddEnodeResponseHandler,
-    peerHandler.ListenForNewEnodes,
-    whisper.AddEtherResponseHandler,
-    fundingHandler.MonitorAccountBalances,
-    statistics.Setup,
-    whisper.ExistingRaftNetworkMembership
-  )
-
-  let result = {
+  let nodeConfig = {
     localIpAddress: config.localIpAddress,
     networkMembership: config.networkMembership,
     keepExistingFiles: config.keepExistingFiles,
@@ -150,7 +151,22 @@ function startNewRaftNetwork(config, cb){
     "web3IPCHost": './Blockchain/geth.ipc',
     "web3RPCProvider": 'http://localhost:'+ports.gethNodeRPC
   }
-  seqFunction(result, function(err, res){
+
+  let seqFunction = async.seq(
+    handleExistingFiles,
+    whisper.StartCommunicationNetwork,
+    handleNetworkConfiguration,
+    startRaftNode,
+    util.CreateWeb3Connection,
+    whisper.AddEnodeResponseHandler,
+    peerHandler.ListenForNewEnodes,
+    whisper.AddEtherResponseHandler,
+    fundingHandler.MonitorAccountBalances,
+    statistics.Setup,
+    whisper.ExistingRaftNetworkMembership
+  )
+
+  seqFunction(nodeConfig, function(err, res){
     if (err) { return console.log('ERROR', err) }
     console.log('[*] Done')
     cb(err, res)

@@ -172,10 +172,10 @@ function checkPreviousCleanExit(cb){
       })
     } 
   }, function(err, result){
-    if(result.geth.length > 0){
+    if(result && result.geth && result.geth.length > 0){
       instanceAlreadyRunningMessage('geth')
     }
-    if(result.constellation.length > 0){
+    if(result && result.constellation && result.constellation.length > 0){
       instanceAlreadyRunningMessage('constellation')
     }
     cb(err, true)

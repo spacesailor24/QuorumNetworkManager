@@ -35,7 +35,7 @@ function requestExistingNetworkMembership(result, cb){
     }
   }, 5000)
 
-  let filter = shh.filter({"topics":["NetworkMembership"]}).watch(function(err, msg) {
+  let networkFilter = shh.filter({"topics":["NetworkMembership"]}).watch(function(err, msg) {
     if(err){console.log("ERROR:", err)}
     let message = null
     if(msg && msg.payload){
@@ -43,6 +43,7 @@ function requestExistingNetworkMembership(result, cb){
     }
     if(message && message.indexOf('response|existingRaftNetworkMembership') >= 0){
       receivedNetworkMembership = true
+      networkFilter.stopWatching() 
       let messageTokens = message.split('|')
       console.log('[*] Network membership:', messageTokens[2])
       result.communicationNetwork.raftID = messageTokens[3]

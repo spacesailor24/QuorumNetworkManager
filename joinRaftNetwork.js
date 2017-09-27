@@ -10,6 +10,7 @@ let statistics = require('./networkStatistics.js')
 let peerHandler = require('./peerHandler.js')
 let fundingHandler = require('./fundingHandler.js')
 let ports = require('./config.js').ports
+let setup = require('./config.js').setup
 
 prompt.start()
 
@@ -74,18 +75,7 @@ function handleNetworkConfiguration(result, cb){
 function joinRaftNetwork(config, cb){
   console.log('[*] Starting new node...')
 
-  let seqFunction = async.seq(
-    handleExistingFiles,
-    handleNetworkConfiguration,
-    startRaftNode,
-    util.CreateWeb3Connection,
-    whisper.AddEnodeResponseHandler,
-    peerHandler.ListenForNewEnodes,
-    fundingHandler.MonitorAccountBalances,
-    statistics.Setup
-  )
-
-  let result = {
+  let nodeConfig = {
     localIpAddress: config.localIpAddress,
     remoteIpAddress : config.remoteIpAddress, 
     keepExistingFiles: config.keepExistingFiles,
@@ -106,11 +96,23 @@ function joinRaftNetwork(config, cb){
       publicArchKeyFileName: 'nodeArch.pub', 
       privateArchKeyFileName: 'nodeArch.key', 
     },
-    communicationNetwork: config.communicationNetwork,
     "web3IPCHost": './Blockchain/geth.ipc',
     "web3RPCProvider": 'http://localhost:'+ports.gethNodeRPC
   }
-  seqFunction(result, function(err, res){
+
+  let seqFunction = async.seq(
+    handleExistingFiles,
+    whisper.JoinCommunicationNetwork,
+    handleNetworkConfiguration,
+    startRaftNode,
+    util.CreateWeb3Connection,
+    whisper.AddEnodeResponseHandler,
+    peerHandler.ListenForNewEnodes,
+    fundingHandler.MonitorAccountBalances,
+    statistics.Setup
+  )
+
+  seqFunction(nodeConfig, function(err, res){
     if (err) { return console.log('ERROR', err) }
     console.log('[*] New node started')
     cb(err, res)
@@ -125,17 +127,13 @@ function handleJoiningRaftNetwork(options, cb){
     + 'please enter the ip address of the coordinating node')
   prompt.get(['ipAddress'], function (err, network) {
     config.remoteIpAddress = network.ipAddress
-    whisper.JoinCommunicationNetwork(config, function(err, result){
-      if (err) { return console(err) }
-      config.communicationNetwork = Object.assign({}, result)
-      joinRaftNetwork(config, function(err, result){
-        if (err) { return console.log('ERROR', err) }
-        let networks = {
-          raftNetwork: Object.assign({}, result),
-          communicationNetwork: config.communicationNetwork
-        }
-        cb(err, networks)
-      })
+    joinRaftNetwork(config, function(err, result){
+      if (err) { return console.log('ERROR', err) }
+      let networks = {
+        raftNetwork: Object.assign({}, result),
+        communicationNetwork: config.communicationNetwork
+      }
+      cb(err, networks)
     })
   })
 }

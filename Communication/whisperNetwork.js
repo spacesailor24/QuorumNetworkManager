@@ -7,6 +7,8 @@ var util = require('../util.js');
 var ports = require('../config.js').ports
 var networkMembership = require('./networkMembership.js');
 
+let whisperLog = 'whisperCommunications.log'
+
 // TODO: Maybe check that address is indeed in need of some ether before sending it some
 // TODO: Check from which address to send the ether, for now this defaults to eth.accounts[0]
 function requestSomeEther(commWeb3RPC, address, cb){
@@ -142,21 +144,22 @@ function copyCommunicationNodeKey(result, cb){
 
 // TODO: Add check whether requester has correct permissions
 function genesisConfigHandler(result, cb){
-  var web3RPC = result.web3RPC;
+  let genesisPath = process.cwd() + '/quorum-genesis.json'
+  let web3RPC = result.web3RPC;
   web3RPC.shh.filter({"topics":["GenesisConfig"]}).watch(function(err, msg) {
     if(err){console.log("ERROR:", err);};
     if(result.genesisBlockConfigReady != true){
       return
     }
-    var message = null;
+    let message = null;
     if(msg && msg.payload){
       message = util.Hex2a(msg.payload);
     } 
     if(message && message.indexOf('request|genesisConfig') >= 0){
-      fs.readFile('quorum-genesis.json', 'utf8', function(err, data){
+      fs.readFile(genesisPath, 'utf8', function(err, data){
         if(err){console.log('ERROR:', err);}   
-        var genesisConfig = 'response|genesisConfig'+data;
-        var hexString = new Buffer(genesisConfig).toString('hex');        
+        let genesisConfig = 'response|genesisConfig'+data;
+        let hexString = new Buffer(genesisConfig).toString('hex');        
         web3RPC.shh.post({
           "topics": ["GenesisConfig"],
           "payload": hexString,
@@ -172,6 +175,7 @@ function genesisConfigHandler(result, cb){
 }
 
 function staticNodesFileHandler(result, cb){
+  let staticNodesPath = process.cwd() + '/Blockchain/static-nodes.json'
   var web3RPC = result.web3RPC;
   web3RPC.shh.filter({"topics":["StaticNodes"]}).watch(function(err, msg) {
     if(err){console.log("ERROR:", err);};
@@ -183,7 +187,7 @@ function staticNodesFileHandler(result, cb){
       message = util.Hex2a(msg.payload);
     } 
     if(message && message.indexOf('request|staticNodes') >= 0){
-      fs.readFile('Blockchain/static-nodes.json', 'utf8', function(err, data){
+      fs.readFile(staticNodesPath, 'utf8', function(err, data){
         if(err){console.log('ERROR:', err);}   
         var staticNodes = 'response|staticNodes'+data;
         var hexString = new Buffer(staticNodes).toString('hex');        
@@ -206,15 +210,15 @@ function getGenesisBlockConfig(result, cb){
 
   console.log('[*] Requesting genesis block config. This will block until the other node is online')
 
-  var shh = result.communicationNetwork.web3RPC.shh;
+  let shh = result.communicationNetwork.web3RPC.shh;
   
-  var id = shh.newIdentity();
-  var str = "request|genesisConfig";
-  var hexString = new Buffer(str).toString('hex');
+  let id = shh.newIdentity();
+  let str = "request|genesisConfig";
+  let hexString = new Buffer(str).toString('hex');
 
-  var receivedGenesisConfig = false
+  let receivedGenesisConfig = false
 
-  var intervalID = setInterval(function(){
+  let intervalID = setInterval(function(){
     if(receivedGenesisConfig){
       clearInterval(intervalID)
     } else {
@@ -230,9 +234,9 @@ function getGenesisBlockConfig(result, cb){
     }
   }, 5000)
 
-  var filter = shh.filter({"topics":["GenesisConfig"]}).watch(function(err, msg) {
+  let filter = shh.filter({"topics":["GenesisConfig"]}).watch(function(err, msg) {
     if(err){console.log("ERROR:", err)}
-    var message = null
+    let message = null
     if(msg && msg.payload){
       message = util.Hex2a(msg.payload)
     }
@@ -241,7 +245,7 @@ function getGenesisBlockConfig(result, cb){
       if(receivedGenesisConfig == false){
         receivedGenesisConfig = true
         filter.stopWatching()
-        var genesisConfig = message.replace('response|genesisConfig', '').substring(1)
+        let genesisConfig = message.replace('response|genesisConfig', '').substring(1)
         genesisConfig = genesisConfig.replace(/\\n/g, '')
         genesisConfig = genesisConfig.replace(/\\/g, '')
         fs.writeFile('quorum-genesis.json', genesisConfig, function(err, res){
@@ -352,7 +356,7 @@ function joinCommunicationNetwork(config, cb){
     remoteEnode = "enode://9443bd2c5ccc5978831088755491417fe0c3866537b5e9638bcb6ad34cb9bcc58a9338bb492590ff200a54b43a6a03e4a7e33fa111d0a7f6b7192d1ca050f300@"
     +remoteIpAddress
     +":"
-    +ports.communicationNode
+    +ports.remoteCommunicationNode
   }
 
   console.log('[*] Joining communication network...');
@@ -372,8 +376,9 @@ function joinCommunicationNetwork(config, cb){
   };
   seqFunction(result, function(err, commNet){
     if (err) { console.log('ERROR:', err) }
-    console.log('[*] Communication network started');
-    cb(err, commNet); 
+    config.communicationNetwork = commNet
+    console.log('[*] Communication network joined');
+    cb(err, config); 
   });
 }
 
