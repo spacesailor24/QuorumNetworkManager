@@ -72,7 +72,7 @@ function addEnodeResponseHandler(result, cb){
     if(message && message.indexOf(msgStr.Request.enode) >= 0){
       web3IPC.admin.nodeInfo(function(err, nodeInfo){
         if(err){console.log('ERROR:', err)}
-        var enodeResponse = msgStr.Join(msgStr.Response.enode, nodeInfo.enode);
+        var enodeResponse = msgStr.Response.enode + nodeInfo.enode;
         enodeResponse = enodeResponse.replace('\[\:\:\]', result.localIpAddress)
         var hexString = new Buffer(enodeResponse).toString('hex')
         var postObj = msgStr.BuildPostObject(['Enode'], hexString, 10, 1);
@@ -146,7 +146,7 @@ function genesisConfigHandler(result, cb){
     if(message && message.indexOf(msgStr.Request.genesisConfig) >= 0){
       fs.readFile(genesisPath, 'utf8', function(err, data){
         if(err){console.log('ERROR:', err);}   
-        let genesisConfig = msgStr.Join(msgStr.Response.genesisConfig, data);
+        let genesisConfig = msgStr.Response.genesisConfig + data;
         let hexString = new Buffer(genesisConfig).toString('hex');        
         let postObj = msgStr.BuildPostObject(['GenesisConfig'], hexString, 10, 1);
         web3RPC.shh.post(postObj.JSON, function(err, res){
@@ -173,7 +173,7 @@ function staticNodesFileHandler(result, cb){
     if(message && message.indexOf(msgStr.Request.staticNodes) >= 0){
       fs.readFile(staticNodesPath, 'utf8', function(err, data){
         if(err){console.log('ERROR:', err);}   
-        var staticNodes = msgStr.Join(msgStr.Response.staticNodes, data);
+        var staticNodes = msgStr.Response.staticNodes + data;
         var hexString = new Buffer(staticNodes).toString('hex');        
         var postObj = msgStr.BuildPostObject(['StaticNodes'], hexString, 10, 1);
         web3RPC.shh.post(postObj.JSON, function(err, res){
