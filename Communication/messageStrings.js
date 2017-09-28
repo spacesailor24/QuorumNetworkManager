@@ -31,14 +31,14 @@ function buildFilterObject(topics) {
 request = {
   ether: buildString('request', 'ether'),
   enode: buildString('request', 'enode'),
-  genesisBlock: buildString('request', 'genesisBlock'),
+  genesisConfig: buildString('request', 'genesisConfig'),
   staticNode: buildString('request', 'staticNode')
 };
 
 response = {
   ether: buildString('response', 'ether'),
   enode: buildString('response', 'enode'),
-  genesisBlock: buildString('response', 'genesisBlock'),
+  genesisConfig: buildString('response', 'genesisConfig'),
   staticNode: buildString('response', 'staticNode')
 };
 
