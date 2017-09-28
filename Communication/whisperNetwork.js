@@ -15,7 +15,7 @@ let whisperLog = 'whisperCommunications.log'
 function requestSomeEther(commWeb3RPC, address, cb){
   var message = msgStr.Join(msgStr.Request.ether, address);
   var hexString = new Buffer(message).toString('hex');        
-  var postObj = msg.BuildPostObject(['Ether'], hexString, 10, 1);
+  var postObj = msgStr.BuildPostObject(['Ether'], hexString, 10, 1);
   commWeb3RPC.shh.post(postObj.JSON, function(err, res){
     if(err){console.log('err', err);}
     cb();
