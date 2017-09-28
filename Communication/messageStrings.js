@@ -32,14 +32,14 @@ request = {
   ether: buildString('request', 'ether'),
   enode: buildString('request', 'enode'),
   genesisConfig: buildString('request', 'genesisConfig'),
-  staticNode: buildString('request', 'staticNode')
+  staticNodes: buildString('request', 'staticNodes')
 };
 
 response = {
   ether: buildString('response', 'ether'),
   enode: buildString('response', 'enode'),
   genesisConfig: buildString('response', 'genesisConfig'),
-  staticNode: buildString('response', 'staticNode')
+  staticNodes: buildString('response', 'staticNodes')
 };
 
 exports.Join = join;
