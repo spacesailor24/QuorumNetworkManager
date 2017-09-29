@@ -272,7 +272,7 @@ function displayEnode(result, cb){
   let child = exec('bootnode -nodekey Blockchain/geth/nodekey -writeaddress', options)
   child.stdout.on('data', function(data){
     data = data.slice(0, -1)
-    let enode = 'enode://'+data+'@'+result.localIpAddress+':'+ports.gethNode+'?raftport='+ports.raftHttp
+    let enode = 'enode://'+data+'@'+result.localIpAddress+':'+ports.gethNode//+'?raftport='+ports.raftHttp
     console.log('\nenode:', enode+'\n')
     result.nodePubKey = data
     result.enodeList = [enode] // TODO: investigate why this is a list
