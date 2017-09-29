@@ -13,7 +13,7 @@ let whisperLog = 'whisperCommunications.log'
 // TODO: Maybe check that address is indeed in need of some ether before sending it some
 // TODO: Check from which address to send the ether, for now this defaults to eth.accounts[0]
 function requestSomeEther(commWeb3RPC, address, cb){
-  var message = messageString.Join(msgStr.Request.ether, address);
+  var message = messageString.Join(messageString.Request.ether, address);
   var hexString = new Buffer(message).toString('hex');        
   var postObj = messageString.BuildPostObject(['Ether'], hexString, 10, 1);
   commWeb3RPC.shh.post(postObj.JSON, function(err, res){
@@ -33,8 +33,8 @@ function addEtherResponseHandler(result, cb){
     if(msg && msg.payload){
       message = util.Hex2a(msg.payload);
     }
-    if(message && message.indexOf(messageString.Join(msgStr.Request.ether, '')) >= 0){
-      var address = message.substring(messageString.Join(msgStr.Request.ether, '').length+1);
+    if(message && message.indexOf(messageString.Request.ether) >= 0){
+      var address = message.substring(messageString.Request.ether.length+2);
 
       if(web3RPC.eth.accounts && web3RPC.eth.accounts.length > 0){  
         web3RPC.eth.getBalance(web3RPC.eth.accounts[0], function(err, balance){
