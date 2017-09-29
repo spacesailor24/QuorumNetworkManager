@@ -1,11 +1,10 @@
 const delimiter = "|";
 
-function buildString(type, parameter) {
-  return type + delimiter + parameter;
-}
-
-function join(str1, str2) {
-  return str1 + delimiter + str2;
+function buildDelimitedString(string1, string2) {
+  if (string2.indexOf(delimiter) > -1) {
+    console.log("ERROR: Message string contains " + delimiter + ", which is reserved for special use");
+  }
+  return string1 + delimiter + string2;
 }
 
 function buildPostObject(topics, payload, ttl, workToProve, id) {
@@ -29,20 +28,20 @@ function buildFilterObject(topics) {
 }
 
 request = {
-  ether: buildString('request', 'ether'),
-  enode: buildString('request', 'enode'),
-  genesisConfig: buildString('request', 'genesisConfig'),
-  staticNodes: buildString('request', 'staticNodes')
+  ether: buildDelimitedString('request', 'ether'),
+  enode: buildDelimitedString('request', 'enode'),
+  genesisConfig: buildDelimitedString('request', 'genesisConfig'),
+  staticNodes: buildDelimitedString('request', 'staticNodes')
 };
 
 response = {
-  ether: buildString('response', 'ether'),
-  enode: buildString('response', 'enode'),
-  genesisConfig: buildString('response', 'genesisConfig'),
-  staticNodes: buildString('response', 'staticNodes')
+  ether: buildDelimitedString('response', 'ether'),
+  enode: buildDelimitedString('response', 'enode'),
+  genesisConfig: buildDelimitedString('response', 'genesisConfig'),
+  staticNodes: buildDelimitedString('response', 'staticNodes')
 };
 
-exports.Join = join;
+exports.BuildDelimitedString = buildDelimitedString;
 exports.BuildPostObject = buildPostObject;
 exports.BuildFilterObject = buildFilterObject;
 exports.Request = request;
