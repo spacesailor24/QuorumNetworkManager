@@ -7,13 +7,15 @@ var util = require('../util.js');
 var ports = require('../config.js').ports
 var networkMembership = require('./networkMembership.js');
 var messageString = require('./messageStrings.js');
+var request = messageString.Request;
+var response = messageString.Response;
 
 let whisperLog = 'whisperCommunications.log'
 
 // TODO: Maybe check that address is indeed in need of some ether before sending it some
 // TODO: Check from which address to send the ether, for now this defaults to eth.accounts[0]
 function requestSomeEther(commWeb3RPC, address, cb){
-  var message = messageString.BuildDelimitedString(messageString.Request.ether, address);
+  var message = messageString.BuildDelimitedString(request.ether, address);
   var hexString = new Buffer(message).toString('hex');        
   var postObj = messageString.BuildPostObject(['Ether'], hexString, 10, 1);
   commWeb3RPC.shh.post(postObj.JSON, function(err, res){
@@ -33,8 +35,8 @@ function addEtherResponseHandler(result, cb){
     if(msg && msg.payload){
       message = util.Hex2a(msg.payload);
     }
-    if(message && message.indexOf(messageString.Request.ether) >= 0){
-      var address = message.substring(messageString.Request.ether.length+2);
+    if(message && message.indexOf(request.ether) >= 0){
+      var address = message.substring(request.ether.length+2);
 
       if(web3RPC.eth.accounts && web3RPC.eth.accounts.length > 0){  
         web3RPC.eth.getBalance(web3RPC.eth.accounts[0], function(err, balance){
@@ -69,10 +71,10 @@ function addEnodeResponseHandler(result, cb){
     if(msg && msg.payload){
       message = util.Hex2a(msg.payload)
     }
-    if(message && message.indexOf(messageString.Request.enode) >= 0){
+    if(message && message.indexOf(request.enode) >= 0){
       web3IPC.admin.nodeInfo(function(err, nodeInfo){
         if(err){console.log('ERROR:', err)}
-        var enodeResponse = messageString.Response.enode + nodeInfo.enode;
+        var enodeResponse = messageString.AppendData(response.enode, nodeInfo.enode);
         enodeResponse = enodeResponse.replace('\[\:\:\]', result.localIpAddress)
         var hexString = new Buffer(enodeResponse).toString('hex')
         var postObj = messageString.BuildPostObject(['Enode'], hexString, 10, 1);
@@ -93,7 +95,7 @@ function addEnodeRequestHandler(result, cb){
   var shh = comm.web3RPC.shh;
   
   var id = shh.newIdentity();
-  var str = messageString.Request.enode;
+  var str = request.enode;
   var hexString = new Buffer(str).toString('hex');
   var postObj = messageString.BuildPostObject(['Enode'], hexString, 10, 1, id);
 
@@ -109,8 +111,8 @@ function addEnodeRequestHandler(result, cb){
     if(msg && msg.payload){
       message = util.Hex2a(msg.payload);
     }
-    if(message && message.indexOf(messageString.Response.enode) >= 0){
-      var enode = message.replace(messageString.Response.enode, '').substring(1);
+    if(message && message.indexOf(response.enode) >= 0){
+      var enode = message.replace(response.enode, '').substring(1);
       events.emit('newEnode', enode);
     }
   })
@@ -143,10 +145,10 @@ function genesisConfigHandler(result, cb){
     if(msg && msg.payload){
       message = util.Hex2a(msg.payload);
     } 
-    if(message && message.indexOf(messageString.Request.genesisConfig) >= 0){
+    if(message && message.indexOf(request.genesisConfig) >= 0){
       fs.readFile(genesisPath, 'utf8', function(err, data){
         if(err){console.log('ERROR:', err);}   
-        let genesisConfig = messageString.Response.genesisConfig + data;
+        let genesisConfig = messageString.AppendData(response.genesisConfig, data);
         let hexString = new Buffer(genesisConfig).toString('hex');        
         let postObj = messageString.BuildPostObject(['GenesisConfig'], hexString, 10, 1);
         web3RPC.shh.post(postObj.JSON, function(err, res){
@@ -170,10 +172,10 @@ function staticNodesFileHandler(result, cb){
     if(msg && msg.payload){
       message = util.Hex2a(msg.payload);
     } 
-    if(message && message.indexOf(messageString.Request.staticNodes) >= 0){
+    if(message && message.indexOf(request.staticNodes) >= 0){
       fs.readFile(staticNodesPath, 'utf8', function(err, data){
         if(err){console.log('ERROR:', err);}   
-        var staticNodes = messageString.Response.staticNodes + data;
+        var staticNodes = messageString.AppendData(response.staticNodes, data);
         var hexString = new Buffer(staticNodes).toString('hex');        
         var postObj = messageString.BuildPostObject(['StaticNodes'], hexString, 10, 1);
         web3RPC.shh.post(postObj.JSON, function(err, res){
@@ -193,7 +195,7 @@ function getGenesisBlockConfig(result, cb){
   let shh = result.communicationNetwork.web3RPC.shh;
   
   let id = shh.newIdentity();
-  let str = messageString.Request.genesisConfig;
+  let str = request.genesisConfig;
   let hexString = new Buffer(str).toString('hex');
   let postObj = messageString.BuildPostObject(['GenesisConfig'], hexString, 10, 1, id);
 
@@ -215,12 +217,12 @@ function getGenesisBlockConfig(result, cb){
     if(msg && msg.payload){
       message = util.Hex2a(msg.payload)
     }
-    if(message && message.indexOf(messageString.Response.genesisConfig) >= 0){
+    if(message && message.indexOf(response.genesisConfig) >= 0){
       console.log('received genesis config')
       if(receivedGenesisConfig == false){
         receivedGenesisConfig = true
         filter.stopWatching()
-        let genesisConfig = message.replace(messageString.Response.genesisConfig, '').substring(1)
+        let genesisConfig = message.replace(response.genesisConfig, '').substring(1)
         genesisConfig = genesisConfig.replace(/\\n/g, '')
         genesisConfig = genesisConfig.replace(/\\/g, '')
         fs.writeFile('quorum-genesis.json', genesisConfig, function(err, res){
@@ -239,7 +241,7 @@ function getStaticNodesFile(result, cb){
   var shh = result.communicationNetwork.web3RPC.shh;
   
   var id = shh.newIdentity();
-  var str = messageString.Request.staticNodes;
+  var str = request.staticNodes;
   var hexString = new Buffer(str).toString('hex');
   var postObj = messageString.BuildPostObject(['StaticNodes'], hexString, 10, 1, id);
 
@@ -261,12 +263,12 @@ function getStaticNodesFile(result, cb){
     if(msg && msg.payload){
       message = util.Hex2a(msg.payload)
     }
-    if(message && message.indexOf(messageString.Response.staticNodes) >= 0){
+    if(message && message.indexOf(response.staticNodes) >= 0){
       console.log('received static nodes file')
       if(receivedStaticNodesFile == false){
         receivedStaticNodesFile = true
         filter.stopWatching()
-        var staticNodesFile = message.replace(messageString.Response.staticNodes, '').substring(1)
+        var staticNodesFile = message.replace(response.staticNodes, '').substring(1)
         staticNodesFile = staticNodesFile.replace(/\\n/g, '')
         staticNodesFile = staticNodesFile.replace(/\\/g, '')
         fs.writeFile('Blockchain/static-nodes.json', staticNodesFile, function(err, res){

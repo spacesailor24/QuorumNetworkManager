@@ -7,6 +7,13 @@ function buildDelimitedString(string1, string2) {
   return string1 + delimiter + string2;
 }
 
+function appendData(string, data) {
+  if (data.indexOf(delimiter) > -1) {
+    console.log("ERROR: Message data contains " + delimiter + ", which is reserved for special use");
+  }
+  return string + data;
+}
+
 function buildPostObject(topics, payload, ttl, workToProve, id) {
   postObj = { 
     JSON: {
@@ -42,6 +49,7 @@ response = {
 };
 
 exports.BuildDelimitedString = buildDelimitedString;
+exports.AppendData = appendData;
 exports.BuildPostObject = buildPostObject;
 exports.BuildFilterObject = buildFilterObject;
 exports.Request = request;
