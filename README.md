@@ -30,7 +30,7 @@ workspace
 This script `setup.sh` needs to be run from the folder where you want the QuorumNetworkManager to be installed, like your workspace:
 
 1. `mkdir workspace && cd $_`
-2. `wget https://github.com/ConsenSys/QuorumNetworkManager/blob/zkpPrecompiles/setup.sh`
+2. `wget https://raw.githubusercontent.com/ConsenSys/QuorumNetworkManager/zkpPrecompiles/setup.sh`
 3. `chmod +x setup.sh`
 4. `./setup.sh`
 5. `source ~/.bashrc`
