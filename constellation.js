@@ -7,7 +7,7 @@ function createNewConstellationKeys(result, cb){
   for(var i in result.constellationKeySetup){
     var folderName = result.constellationKeySetup[i].folderName;
     var fileName = result.constellationKeySetup[i].fileName;
-    cmd += 'cd '+folderName+' && constellation-enclave-keygen '+fileName+' && cd .. && '; 
+    cmd += 'cd '+folderName+' && constellation-node --generatekeys='+fileName+' && cd .. && '; 
   }
   cmd = cmd.substring(0, cmd.length-4);
   var child = exec(cmd);
@@ -33,13 +33,13 @@ function createConstellationConfig(result, cb){
   var c = result.constellationConfigSetup;
   var config = 'url = "http://'+c.localIpAddress+':'+c.localPort+'/"\n';
   config += 'port = '+c.localPort+'\n';
-  config += 'socketPath = "'+c.folderName+'/socket.ipc"\n';
-  config += 'otherNodeUrls = ["http://'+c.remoteIpAddress+':'+c.remotePort+'/"]\n';
-  config += 'publicKeyPath = "'+c.folderName+'/'+c.publicKeyFileName+'"\n';
-  config += 'privateKeyPath = "'+c.folderName+'/'+c.privateKeyFileName+'"\n';
-  config += 'archivalPublicKeyPath = "'+c.folderName+'/'+c.publicArchKeyFileName+'"\n';
-  config += 'archivalPrivateKeyPath = "'+c.folderName+'/'+c.privateArchKeyFileName+'"\n';
-  config += 'storagePath = "'+c.folderName+'/data"';
+  config += 'socket = "'+c.folderName+'/socket.ipc"\n';
+  config += 'othernodes = ["http://'+c.remoteIpAddress+':'+c.remotePort+'/"]\n';
+  config += 'publickeys = ["'+c.folderName+'/'+c.publicKeyFileName+
+    '","'+c.folderName+'/'+c.publicArchKeyFileName+'"]\n';
+  config += 'privatekeys = ["'+c.folderName+'/'+c.privateKeyFileName+
+    '","'+c.folderName+'/'+c.privateArchKeyFileName+'"]\n';
+  config += 'storage = "'+c.folderName+'/data"';
   fs.writeFile(c.configName, config, function(err, res){
     cb(err, result);
   });
