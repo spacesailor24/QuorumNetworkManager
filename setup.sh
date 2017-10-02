@@ -48,6 +48,6 @@ sudo npm install -g
 
 cd ..
 git clone https://github.com/consensys/QuorumNetworkManager.git
-git checkout zkpPrecompiles
 cd QuorumNetworkManager/
+git checkout zkpPrecompiles
 npm install
