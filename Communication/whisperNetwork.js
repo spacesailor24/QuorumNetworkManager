@@ -6,20 +6,19 @@ var events = require('../eventEmitter.js');
 var util = require('../util.js');
 var ports = require('../config.js').ports
 var networkMembership = require('./networkMembership.js');
+var messageString = require('./messageStrings.js');
+var request = messageString.Request;
+var response = messageString.Response;
 
 let whisperLog = 'whisperCommunications.log'
 
 // TODO: Maybe check that address is indeed in need of some ether before sending it some
 // TODO: Check from which address to send the ether, for now this defaults to eth.accounts[0]
 function requestSomeEther(commWeb3RPC, address, cb){
-  var message = 'request|ether|'+address;
+  var message = messageString.BuildDelimitedString(request.ether, address);
   var hexString = new Buffer(message).toString('hex');        
-  commWeb3RPC.shh.post({
-    "topics": ["Ether"],
-    "payload": hexString,
-    "ttl": 10,
-    "workToProve": 1
-  }, function(err, res){
+  var postObj = messageString.BuildPostObject(['Ether'], hexString, 10, 1);
+  commWeb3RPC.shh.post(postObj.JSON, function(err, res){
     if(err){console.log('err', err);}
     cb();
   });
@@ -30,14 +29,14 @@ function requestSomeEther(commWeb3RPC, address, cb){
 function addEtherResponseHandler(result, cb){
   var web3RPC = result.web3RPC;
   var commWeb3RPC = result.communicationNetwork.web3RPC;
-  commWeb3RPC.shh.filter({"topics":["Ether"]}).watch(function(err, msg) {
+  commWeb3RPC.shh.filter(messageString.BuildFilterObject(["Ether"])).watch(function(err, msg) {
     if(err){console.log("ERROR:", err);};
     var message = null;
     if(msg && msg.payload){
       message = util.Hex2a(msg.payload);
     }
-    if(message && message.indexOf('request|ether|') >= 0){
-      var address = message.substring('request|ether|'.length+1);
+    if(message && message.indexOf(request.ether) >= 0){
+      var address = message.substring(request.ether.length+2);
 
       if(web3RPC.eth.accounts && web3RPC.eth.accounts.length > 0){  
         web3RPC.eth.getBalance(web3RPC.eth.accounts[0], function(err, balance){
@@ -66,24 +65,20 @@ function addEtherResponseHandler(result, cb){
 function addEnodeResponseHandler(result, cb){
   let web3IPC = result.web3IPC
   let commWeb3RPC = result.communicationNetwork.web3RPC
-  commWeb3RPC.shh.filter({"topics":["Enode"]}).watch(function(err, msg) {
+  commWeb3RPC.shh.filter(messageString.BuildFilterObject(["Enode"])).watch(function(err, msg) {
     if(err){console.log("ERROR:", err)}
     var message = null
     if(msg && msg.payload){
       message = util.Hex2a(msg.payload)
     }
-    if(message && message.indexOf('request|enode') >= 0){
+    if(message && message.indexOf(request.enode) >= 0){
       web3IPC.admin.nodeInfo(function(err, nodeInfo){
         if(err){console.log('ERROR:', err)}
-        var enodeResponse = 'response|enode'+nodeInfo.enode
+        var enodeResponse = messageString.AppendData(response.enode, nodeInfo.enode);
         enodeResponse = enodeResponse.replace('\[\:\:\]', result.localIpAddress)
         var hexString = new Buffer(enodeResponse).toString('hex')
-        commWeb3RPC.shh.post({
-          "topics": ["Enode"],
-          "payload": hexString,
-          "ttl": 10,
-          "workToProve": 1
-        }, function(err, res){
+        var postObj = messageString.BuildPostObject(['Enode'], hexString, 10, 1);
+        commWeb3RPC.shh.post(postObj.JSON, function(err, res){
           if(err){console.log('err', err);}
         })
       })
@@ -100,29 +95,24 @@ function addEnodeRequestHandler(result, cb){
   var shh = comm.web3RPC.shh;
   
   var id = shh.newIdentity();
-  var str = "request|enode";
+  var str = request.enode;
   var hexString = new Buffer(str).toString('hex');
+  var postObj = messageString.BuildPostObject(['Enode'], hexString, 10, 1, id);
 
   setInterval(function(){
-    shh.post({
-      "from": id,
-      "topics": ["Enode"],
-      "payload": hexString,
-      "ttl": 10,
-      "workToProve": 1
-    }, function(err, res){
+    shh.post(postObj.JSON, function(err, res){
       if(err){console.log('err', err)}
     })
   }, 10*1000)
 
-  var filter = shh.filter({"topics":["Enode"]}).watch(function(err, msg) {
+  var filter = shh.filter(postObj.filterObject).watch(function(err, msg) {
     if(err){console.log("ERROR:", err);};
     var message = null;
     if(msg && msg.payload){
       message = util.Hex2a(msg.payload);
     }
-    if(message && message.indexOf('response|enode') >= 0){
-      var enode = message.replace('response|enode', '').substring(1);
+    if(message && message.indexOf(response.enode) >= 0){
+      var enode = message.replace(response.enode, '').substring(1);
       events.emit('newEnode', enode);
     }
   })
@@ -146,7 +136,7 @@ function copyCommunicationNodeKey(result, cb){
 function genesisConfigHandler(result, cb){
   let genesisPath = process.cwd() + '/quorum-genesis.json'
   let web3RPC = result.web3RPC;
-  web3RPC.shh.filter({"topics":["GenesisConfig"]}).watch(function(err, msg) {
+  web3RPC.shh.filter(messageString.BuildFilterObject(['GenesisConfig'])).watch(function(err, msg) {
     if(err){console.log("ERROR:", err);};
     if(result.genesisBlockConfigReady != true){
       return
@@ -155,17 +145,13 @@ function genesisConfigHandler(result, cb){
     if(msg && msg.payload){
       message = util.Hex2a(msg.payload);
     } 
-    if(message && message.indexOf('request|genesisConfig') >= 0){
+    if(message && message.indexOf(request.genesisConfig) >= 0){
       fs.readFile(genesisPath, 'utf8', function(err, data){
         if(err){console.log('ERROR:', err);}   
-        let genesisConfig = 'response|genesisConfig'+data;
+        let genesisConfig = messageString.AppendData(response.genesisConfig, data);
         let hexString = new Buffer(genesisConfig).toString('hex');        
-        web3RPC.shh.post({
-          "topics": ["GenesisConfig"],
-          "payload": hexString,
-          "ttl": 10,
-          "workToProve": 1
-        }, function(err, res){
+        let postObj = messageString.BuildPostObject(['GenesisConfig'], hexString, 10, 1);
+        web3RPC.shh.post(postObj.JSON, function(err, res){
           if(err){console.log('err', err);}
         });
       });
@@ -177,7 +163,7 @@ function genesisConfigHandler(result, cb){
 function staticNodesFileHandler(result, cb){
   let staticNodesPath = process.cwd() + '/Blockchain/static-nodes.json'
   var web3RPC = result.web3RPC;
-  web3RPC.shh.filter({"topics":["StaticNodes"]}).watch(function(err, msg) {
+  web3RPC.shh.filter(messageString.BuildFilterObject(['StaticNodes'])).watch(function(err, msg) {
     if(err){console.log("ERROR:", err);};
     if(result.staticNodesFileReady != true){
       return
@@ -186,17 +172,13 @@ function staticNodesFileHandler(result, cb){
     if(msg && msg.payload){
       message = util.Hex2a(msg.payload);
     } 
-    if(message && message.indexOf('request|staticNodes') >= 0){
+    if(message && message.indexOf(request.staticNodes) >= 0){
       fs.readFile(staticNodesPath, 'utf8', function(err, data){
         if(err){console.log('ERROR:', err);}   
-        var staticNodes = 'response|staticNodes'+data;
+        var staticNodes = messageString.AppendData(response.staticNodes, data);
         var hexString = new Buffer(staticNodes).toString('hex');        
-        web3RPC.shh.post({
-          "topics": ["StaticNodes"],
-          "payload": hexString,
-          "ttl": 10,
-          "workToProve": 1
-        }, function(err, res){
+        var postObj = messageString.BuildPostObject(['StaticNodes'], hexString, 10, 1);
+        web3RPC.shh.post(postObj.JSON, function(err, res){
           if(err){console.log('err', err);}
         });
       });
@@ -213,8 +195,9 @@ function getGenesisBlockConfig(result, cb){
   let shh = result.communicationNetwork.web3RPC.shh;
   
   let id = shh.newIdentity();
-  let str = "request|genesisConfig";
+  let str = request.genesisConfig;
   let hexString = new Buffer(str).toString('hex');
+  let postObj = messageString.BuildPostObject(['GenesisConfig'], hexString, 10, 1, id);
 
   let receivedGenesisConfig = false
 
@@ -222,30 +205,24 @@ function getGenesisBlockConfig(result, cb){
     if(receivedGenesisConfig){
       clearInterval(intervalID)
     } else {
-      shh.post({
-        "from": id,
-        "topics": ["GenesisConfig"],
-        "payload": hexString,
-        "ttl": 10,
-        "workToProve": 1
-      }, function(err, res){
+      shh.post(postObj.JSON, function(err, res){
         if(err){console.log('err', err)}
       })
     }
   }, 5000)
 
-  let filter = shh.filter({"topics":["GenesisConfig"]}).watch(function(err, msg) {
+  let filter = shh.filter(postObj.filterObject).watch(function(err, msg) {
     if(err){console.log("ERROR:", err)}
     let message = null
     if(msg && msg.payload){
       message = util.Hex2a(msg.payload)
     }
-    if(message && message.indexOf('response|genesisConfig') >= 0){
+    if(message && message.indexOf(response.genesisConfig) >= 0){
       console.log('received genesis config')
       if(receivedGenesisConfig == false){
         receivedGenesisConfig = true
         filter.stopWatching()
-        let genesisConfig = message.replace('response|genesisConfig', '').substring(1)
+        let genesisConfig = message.replace(response.genesisConfig, '').substring(1)
         genesisConfig = genesisConfig.replace(/\\n/g, '')
         genesisConfig = genesisConfig.replace(/\\/g, '')
         fs.writeFile('quorum-genesis.json', genesisConfig, function(err, res){
@@ -264,8 +241,9 @@ function getStaticNodesFile(result, cb){
   var shh = result.communicationNetwork.web3RPC.shh;
   
   var id = shh.newIdentity();
-  var str = "request|staticNodes";
+  var str = request.staticNodes;
   var hexString = new Buffer(str).toString('hex');
+  var postObj = messageString.BuildPostObject(['StaticNodes'], hexString, 10, 1, id);
 
   var receivedStaticNodesFile = false
 
@@ -273,30 +251,24 @@ function getStaticNodesFile(result, cb){
     if(receivedStaticNodesFile){
       clearInterval(intervalID)
     } else {
-      shh.post({
-        "from": id,
-        "topics": ["StaticNodes"],
-        "payload": hexString,
-        "ttl": 10,
-        "workToProve": 1
-      }, function(err, res){
+      shh.post(postObj.JSON, function(err, res){
         if(err){console.log('err', err)}
       })
     }
   }, 5000)
 
-  var filter = shh.filter({"topics":["StaticNodes"]}).watch(function(err, msg) {
+  var filter = shh.filter(postObj.filterObject).watch(function(err, msg) {
     if(err){console.log("ERROR:", err)}
     var message = null
     if(msg && msg.payload){
       message = util.Hex2a(msg.payload)
     }
-    if(message && message.indexOf('response|staticNodes') >= 0){
+    if(message && message.indexOf(response.staticNodes) >= 0){
       console.log('received static nodes file')
       if(receivedStaticNodesFile == false){
         receivedStaticNodesFile = true
         filter.stopWatching()
-        var staticNodesFile = message.replace('response|staticNodes', '').substring(1)
+        var staticNodesFile = message.replace(response.staticNodes, '').substring(1)
         staticNodesFile = staticNodesFile.replace(/\\n/g, '')
         staticNodesFile = staticNodesFile.replace(/\\/g, '')
         fs.writeFile('Blockchain/static-nodes.json', staticNodesFile, function(err, res){
