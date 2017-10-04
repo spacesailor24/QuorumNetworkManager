@@ -5,6 +5,7 @@
 3. Start node from config
 4. Running
 5. Firewall rules
+6. Constellation
 
 # Introduction & Additional functionality
 
@@ -383,6 +384,18 @@ constellation-network
 Port: TCP 9000
 
 ```
+
+# Constellation
+
+The `removeConstellation.sh` script can be used to remove constellation binaries and their entry into the `.bashrc`. Note that this script will leave the constellation directories intact (this is to prevent accidental deletion of directories if constellation wasn't installed using the `setup.sh` script).
+
+## Upgrading Constellation
+
+The QuorumNetworkManager upgrades constellation from `v0.0.1` to `v0.1.0` in commit [9061d3c](https://github.com/ConsenSys/QuorumNetworkManager/commit/9061d3c4144c9c9f25c607ad2a1a116f4ea81526). If you are on constellation `v0.0.1` and want to upgrade to `v0.1.0` please:
+
+1. use a version of the QNM after [9061d3c](https://github.com/ConsenSys/QuorumNetworkManager/commit/9061d3c4144c9c9f25c607ad2a1a116f4ea81526)
+2. run the `upgradeConstellationTo010.sh` script
+3. run `source ~/.bashrc`
 
 
 

@@ -1,19 +1,19 @@
 #!/bin/bash
 
-sudo apt-get update;
+sudo apt-get update
 sudo apt-get install -y build-essential libssl-dev git curl
 
 curl -sL https://deb.nodesource.com/setup_8.x | sudo -E bash -
 sudo apt-get install -y nodejs
 
 wget https://storage.googleapis.com/golang/go1.7.linux-amd64.tar.gz
-sudo tar -xvf go1.7.linux-amd64.tar.gz
+tar -xf go1.7.linux-amd64.tar.gz
 sudo cp -r go/ /usr/local/
-sudo rm -rf go/ go1.7.linux-amd64.tar.gz
-
+rm -rf go/ go1.7.linux-amd64.tar.gz
 export GOROOT=/usr/local/go
 export GOPATH=$HOME/projects/go
 export PATH=$GOPATH/bin:$GOROOT/bin:$PATH
+echo "PATH=\$PATH:/usr/local/go/bin" >> ~/.bashrc
 
 sudo apt-get install -y software-properties-common
 sudo add-apt-repository -y ppa:ethereum/ethereum
@@ -29,15 +29,14 @@ source ~/.bashrc
 export PATH=$PWD/build/bin:$PATH
 
 cd ..
-mkdir constellation && cd constellation/
-sudo apt-get install -y libdb-dev libsodium-dev zlib1g-dev libtinfo-dev unzip
-wget https://github.com/jpmorganchase/constellation/releases/download/v0.0.1-alpha/ubuntu1604.zip
-unzip ubuntu1604.zip
-chmod +x ubuntu1604/constellation-node
-chmod +x ubuntu1604/constellation-enclave-keygen
-echo "PATH=\$PATH:"$PWD/ubuntu1604 >> ~/.bashrc
+mkdir -p constellation && cd constellation/
+sudo apt-get install -y unzip libdb-dev libleveldb-dev libsodium-dev zlib1g-dev libtinfo-dev
+wget https://github.com/jpmorganchase/constellation/releases/download/v0.1.0/constellation-0.1.0-ubuntu1604.tar.xz -O constellation-0.1.0-ubuntu1604.tar.xz
+tar -xf constellation-0.1.0-ubuntu1604.tar.xz
+chmod +x constellation-0.1.0-ubuntu1604/constellation-node
+echo "PATH=\$PATH:"$PWD/constellation-0.1.0-ubuntu1604 >> ~/.bashrc
 source ~/.bashrc
-export PATH=$PWD/ubuntu1604:$PATH
+export PATH=$PWD/constellation-0.1.0-ubuntu1604:$PATH
 
 cd ..
 git clone https://github.com/davebryson/quorum-genesis.git
