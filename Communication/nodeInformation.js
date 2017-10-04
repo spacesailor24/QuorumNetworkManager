@@ -24,7 +24,7 @@ function publishNodeInformation(result, cb){
     nodePubKey: result.nodePubKey,
     ipAddress: result.localIpAddress,
     nodeName: config.identity.nodeName,
-    address: result.addressList[0],
+    address: web3RPC.eth.accounts[0],
     constellationPublicKey: constellationPublicKey
   }
      
