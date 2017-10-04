@@ -387,7 +387,7 @@ Port: TCP 9000
 
 # Constellation
 
-The `removeConstellation.sh` script can be used to remove constellation binaries and their entry into the `.bashrc`. Note that this script will leave the constellation directories intact (this is to prevent accedental deletion of directories if constellation wasn't installed using the `setup.sh` script).
+The `removeConstellation.sh` script can be used to remove constellation binaries and their entry into the `.bashrc`. Note that this script will leave the constellation directories intact (this is to prevent accidental deletion of directories if constellation wasn't installed using the `setup.sh` script).
 
 ## Upgrading Constellation
 
