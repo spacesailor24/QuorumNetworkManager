@@ -2,7 +2,7 @@ var exec = require('child_process').exec;
 var fs = require('fs');
 
 function checkVersionOfConstellation(cb){
-  let helpUrl = 'https://github.com/ConsenSys/QuorumNetworkManager/tree/UpgradingConstellation#upgrading-constellation'
+  let helpUrl = 'https://github.com/ConsenSys/QuorumNetworkManager#upgrading-constellation'
   let cmd = 'constellation-node --version'
   let child = exec(cmd)
   child.stdout.on('data', function(data){
