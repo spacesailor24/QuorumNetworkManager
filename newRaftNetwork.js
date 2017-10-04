@@ -164,7 +164,8 @@ function startNewRaftNetwork(config, cb){
     whisper.AddEtherResponseHandler,
     fundingHandler.MonitorAccountBalances,
     statistics.Setup,
-    whisper.ExistingRaftNetworkMembership
+    whisper.ExistingRaftNetworkMembership,
+    whisper.PublishNodeInformation
   )
 
   seqFunction(nodeConfig, function(err, res){
