@@ -2,18 +2,20 @@ var exec = require('child_process').exec;
 var fs = require('fs');
 
 function checkVersionOfConstellation(cb){
+  let helpUrl = 'https://github.com/ConsenSys/QuorumNetworkManager/tree/UpgradingConstellation#upgrading-constellation'
   let cmd = 'constellation-node --version'
   let child = exec(cmd)
   child.stdout.on('data', function(data){
     if(data.includes('Constellation Node 0.1.0') == false){
-      console.log('Incorrect version of constellation installed, please refer to https://github.com/ConsenSys/QuorumNetworkManager/tree/UpgradingConstellation#upgrading-constellation')
+      console.log('Incorrect version of constellation installed, please refer to', helpUrl)
       cb(false)
     } else {
       cb(true)
     }
   })
   child.stderr.on('data', function(error){
-    console.log('constellation-node --version ERROR:', error)
+    console.log('ERROR:', error)
+    console.log('ERROR is likely because an incorrect version of constellation is installed, please refer to', helpUrl)
     cb(false)
   })
 }
