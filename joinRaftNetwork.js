@@ -109,7 +109,8 @@ function joinRaftNetwork(config, cb){
     whisper.AddEnodeResponseHandler,
     peerHandler.ListenForNewEnodes,
     fundingHandler.MonitorAccountBalances,
-    statistics.Setup
+    statistics.Setup,
+    whisper.PublishNodeInformation
   )
 
   seqFunction(nodeConfig, function(err, res){

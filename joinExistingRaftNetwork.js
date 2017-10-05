@@ -111,7 +111,8 @@ function joinRaftNetwork(config, cb){
     util.CreateWeb3Connection,
     whisper.AddEnodeResponseHandler,
     peerHandler.ListenForNewEnodes,
-    fundingHandler.MonitorAccountBalances
+    fundingHandler.MonitorAccountBalances,
+    whisper.PublishNodeInformation
   )
 
   seqFunction(nodeConfig, function(err, res){
