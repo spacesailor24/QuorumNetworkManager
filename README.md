@@ -79,15 +79,13 @@ NOTE: This should replace your currently installed `geth`.
 
 Installation guide for https://github.com/jpmorganchase/constellation
 
-1. `sudo apt-get install libdb-dev libsodium-dev zlib1g-dev libtinfo-dev unzip`
-2. `mkdir constellation`
-3. `cd constellation`
-4. `wget https://github.com/jpmorganchase/constellation/releases/download/v0.0.1-alpha/ubuntu1604.zip`
-5. `unzip ubuntu1604.zip`
-6. `chmod +x ubuntu1604/constellation-node`
-7. `chmod +x ubuntu1604/constellation-enclave-keygen`
-8. Add ubuntu1604 to your PATH: `echo "PATH=\$PATH:"$PWD/ubuntu1604 >> ~/.bashrc`
-9. `source ~/.bashrc`
+1. `mkdir -p constellation && cd constellation/`
+2. `sudo apt-get install -y unzip libdb-dev libleveldb-dev libsodium-dev zlib1g-dev libtinfo-dev`
+3. `wget https://github.com/jpmorganchase/constellation/releases/download/v0.1.0/constellation-0.1.0-ubuntu1604.tar.xz -O constellation-0.1.0-ubuntu1604.tar.xz`
+4. `tar -xf constellation-0.1.0-ubuntu1604.tar.xz`
+5. `chmod +x constellation-0.1.0-ubuntu1604/constellation-node`
+6. `echo "PATH=\$PATH:"$PWD/constellation-0.1.0-ubuntu1604 >> ~/.bashrc`
+7. `source ~/.bashrc`
 
 ### Installing Quorum Genesis
 
