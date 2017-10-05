@@ -14,6 +14,9 @@ function appendData(string, data) {
   return string + data;
 }
 
+// TODO: this can be improved to take in some defaults for ttl and workToProve
+// TODO: this can also perhaps have the option between an object with the parameters or 
+// the individual parameters
 function buildPostObject(topics, payload, ttl, workToProve, id) {
   postObj = { 
     JSON: {
@@ -48,9 +51,14 @@ response = {
   staticNodes: buildDelimitedString('response', 'staticNodes')
 };
 
+publish = {
+  nodeInfo: buildDelimitedString('publish', 'nodeInfo')
+}
+
 exports.BuildDelimitedString = buildDelimitedString;
 exports.AppendData = appendData;
 exports.BuildPostObject = buildPostObject;
 exports.BuildFilterObject = buildFilterObject;
 exports.Request = request;
 exports.Response = response;
+exports.Publish = publish;
