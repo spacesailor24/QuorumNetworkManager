@@ -68,41 +68,40 @@ function waitForIPCPath(path, cb){
   }
 }
 
-function waitForIPCConnection(web3IPC, cb){
-  let web3IPCConnection = web3IPC.currentProvider.connection
-  if(web3IPCConnection.connecting == false){
+function waitForRPCConnection(web3RPC, cb){
+  if(web3RPC.isConnected() === true){
     cb()
   } else {
     setTimeout(function(){
-      waitForIPCConnection(web3IPC, cb)
+      console.log('waiting for RPC connection ...')
+      waitForRPCConnection(web3RPC, cb)
     }, 1000)
   }
 }
 
 // TODO: add error handler here for web3 connections so that program doesn't exit on error
 function createWeb3Connection(result, cb){
-  console.log('[* Info] If you see a single message starting with \"IPC Connection Error\", you can safely ignore it')
   let host = result.web3IPCHost;
   waitForIPCPath(host, function(){
-    // Web3 IPC
-    let Web3IPC = require('web3_ipc');
-    let options = {
-      host: host,
-      ipc: true,
-      personal: true,
-      admin: true,
-      debug: false
-    };
-    let web3IPC = Web3IPC.create(options);
-    let web3IPCConnection = web3IPC.currentProvider.connection
-    waitForIPCConnection(web3IPC, function(){
-      console.log('[*] IPC Connection open, node started')
+    // Web3 RPC
+    let httpProvider = result.web3RPCProvider;
+    let Web3RPC = require('web3');
+    let web3RPC = new Web3RPC(new Web3RPC.providers.HttpProvider(httpProvider));
+    result.web3RPC = web3RPC;
+    waitForRPCConnection(web3RPC, function(){ 
+      console.log('[*] RPC connection established, Node started')
+      // Web3 IPC
+      let Web3IPC = require('web3_ipc');
+      let options = {
+        host: host,
+        ipc: true,
+        personal: true,
+        admin: true,
+        debug: false
+      };
+      let web3IPC = Web3IPC.create(options);
+      let web3IPCConnection = web3IPC.currentProvider.connection
       result.web3IPC = web3IPC;
-      // Web3 RPC
-      let httpProvider = result.web3RPCProvider;
-      let Web3RPC = require('web3');
-      let web3RPC = new Web3RPC(new Web3RPC.providers.HttpProvider(httpProvider));
-      result.web3RPC = web3RPC;
       // Web3 RPC Quorum
       let Web3RPCQuorum = require('web3quorum');
       let web3RPCQuorum = new Web3RPCQuorum(new Web3RPCQuorum.providers.HttpProvider(httpProvider));
