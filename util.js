@@ -240,7 +240,6 @@ function generateEnode(result, cb){
     console.log('ERROR:', error)
   })
   child.stdout.on('close', function(error){
-    console.log('close event fired')
     getEnodePubKey(function(err, pubKey){
       let enode = 'enode://'+pubKey+'@'+result.localIpAddress+':'+ports.gethNode+
         '?raftport='+ports.raftHttp
