@@ -232,6 +232,19 @@ function isWeb3RPCConnectionAlive(web3RPC){
   return isAlive 
 }
 
+function getEnodePubKey(cb){
+  let options = {encoding: 'utf8', timeout: 10*1000};
+  let child = exec('bootnode -nodekey Blockchain/geth/nodekey -writeaddress', options)
+  child.stdout.on('data', function(data){
+    data = data.slice(0, -1)
+    cb(null, data)
+  })
+  child.stderr.on('data', function(error){
+    console.log('ERROR:', error)
+    cb(error, null)
+  })
+}
+
 function generateEnode(result, cb){
   var options = {encoding: 'utf8', timeout: 10*1000};
   console.log('Generating node key')
@@ -247,22 +260,6 @@ function generateEnode(result, cb){
       result.enodeList = [enode]
       cb(null, result)
     })
-  })
-  /*setTimeout(function(){
-    cb(null, result)
-  }, 1000)*/
-}
-
-function getEnodePubKey(cb){
-  let options = {encoding: 'utf8', timeout: 10*1000};
-  let child = exec('bootnode -nodekey Blockchain/geth/nodekey -writeaddress', options)
-  child.stdout.on('data', function(data){
-    data = data.slice(0, -1)
-    cb(null, data)
-  })
-  child.stderr.on('data', function(error){
-    console.log('ERROR:', error)
-    cb(error, null)
   })
 }
 
