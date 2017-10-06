@@ -41,7 +41,7 @@ function handleExistingFiles(result, cb){
       util.CreateDirectories,
       util.GetNewGethAccount,
       displayGethAccount,
-      util.GenerateNodeKey,    
+      util.GenerateEnode,    
       util.DisplayEnode,
       constellation.CreateNewKeys, 
       constellation.CreateConfig

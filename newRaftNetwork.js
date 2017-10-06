@@ -89,7 +89,7 @@ function handleExistingFiles(result, cb){
     let seqFunction = async.seq(
       util.ClearDirectories,
       util.CreateDirectories,
-      util.GenerateNodeKey,    
+      util.GenerateEnode,    
       util.DisplayEnode
     )
     seqFunction(result, function(err, res){
