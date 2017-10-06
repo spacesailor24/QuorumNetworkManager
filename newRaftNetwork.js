@@ -6,7 +6,6 @@ let fs = require('fs')
 let whisper = require('./Communication/whisperNetwork.js')
 let util = require('./util.js')
 let constellation = require('./constellation.js')
-let statistics = require('./networkStatistics.js')
 let peerHandler = require('./peerHandler.js')
 let fundingHandler = require('./fundingHandler.js')
 let ports = require('./config.js').ports
@@ -162,7 +161,6 @@ function startNewRaftNetwork(config, cb){
     peerHandler.ListenForNewEnodes,
     whisper.AddEtherResponseHandler,
     fundingHandler.MonitorAccountBalances,
-    statistics.Setup,
     whisper.ExistingRaftNetworkMembership,
     whisper.PublishNodeInformation
   )
