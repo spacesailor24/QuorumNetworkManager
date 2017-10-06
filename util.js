@@ -232,33 +232,34 @@ function isWeb3RPCConnectionAlive(web3RPC){
   return isAlive 
 }
 
-function generateNodeKey(result, cb){
+function generateEnode(result, cb){
   var options = {encoding: 'utf8', timeout: 10*1000};
   console.log('Generating node key')
   var child = exec('bootnode -genkey Blockchain/geth/nodekey', options)
   child.stderr.on('data', function(error){
     console.log('ERROR:', error)
   })
-  setTimeout(function(){
+  child.stdout.on('close', function(error){
+    console.log('close event fired')
+    getEnodePubKey(function(err, pubKey){
+      let enode = 'enode://'+pubKey+'@'+result.localIpAddress+':'+ports.gethNode+
+        '?raftport='+ports.raftHttp
+      result.nodePubKey = pubKey
+      result.enodeList = [enode]
+      cb(null, result)
+    })
+  })
+  /*setTimeout(function(){
     cb(null, result)
-  }, 1000)
+  }, 1000)*/
 }
 
-// TODO: ports shouldn't be hard coded!!!
-function displayCommunicationEnode(result, cb){
-  if(!result){
-    return cb({error: 'parameter not defined, could not get ip address'}, null)
-  }
-  var options = {encoding: 'utf8', timeout: 10*1000};
-  var child = exec('bootnode -nodekey CommunicationNode/geth/nodekey -writeaddress', options)
+function getEnodePubKey(cb){
+  let options = {encoding: 'utf8', timeout: 10*1000};
+  let child = exec('bootnode -nodekey Blockchain/geth/nodekey -writeaddress', options)
   child.stdout.on('data', function(data){
     data = data.slice(0, -1)
-    let enode = 'enode://'+data+'@'+result.localIpAddress+':'
-      +ports.communicationNode
-    console.log('\n', enode+'\n')
-    result.nodePubKey = data
-    result.enodeList = [enode]
-    cb(null, result)
+    cb(null, data)
   })
   child.stderr.on('data', function(error){
     console.log('ERROR:', error)
@@ -273,8 +274,29 @@ function displayEnode(result, cb){
     data = data.slice(0, -1)
     let enode = 'enode://'+data+'@'+result.localIpAddress+':'+ports.gethNode+'?raftport='+ports.raftHttp
     console.log('\nenode:', enode+'\n')
+    //result.nodePubKey = data
+    //result.enodeList = [enode] // TODO: investigate why this is a list
+    cb(null, result)
+  })
+  child.stderr.on('data', function(error){
+    console.log('ERROR:', error)
+    cb(error, null)
+  })
+}
+
+function displayCommunicationEnode(result, cb){
+  if(!result){
+    return cb({error: 'parameter not defined, could not get ip address'}, null)
+  }
+  var options = {encoding: 'utf8', timeout: 10*1000};
+  var child = exec('bootnode -nodekey CommunicationNode/geth/nodekey -writeaddress', options)
+  child.stdout.on('data', function(data){
+    data = data.slice(0, -1)
+    let enode = 'enode://'+data+'@'+result.localIpAddress+':'
+      +ports.communicationNode
+    console.log('\n', enode+'\n')
     result.nodePubKey = data
-    result.enodeList = [enode] // TODO: investigate why this is a list
+    result.enodeList = [enode]
     cb(null, result)
   })
   child.stderr.on('data', function(error){
@@ -310,7 +332,7 @@ exports.CheckPreviousCleanExit = checkPreviousCleanExit
 exports.CreateQuorumConfig = createQuorumConfig
 exports.CreateGenesisBlockConfig = createGenesisBlockConfig
 exports.IsWeb3RPCConnectionAlive = isWeb3RPCConnectionAlive
-exports.GenerateNodeKey = generateNodeKey
+exports.GenerateEnode = generateEnode
 exports.DisplayEnode = displayEnode
 exports.DisplayCommunicationEnode = displayCommunicationEnode
 exports.UnlockAllAccounts = unlockAllAccounts
