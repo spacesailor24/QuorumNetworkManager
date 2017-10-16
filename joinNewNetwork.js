@@ -32,6 +32,7 @@ function joinNewQuorumNetwork(config, cb){
     getConfiguration,
     constellation.CreateNewKeys, 
     constellation.CreateConfig,
+    whisper.JoinCommunicationNetwork,
     whisper.GetGenesisBlockConfig,
     startNode,
     util.CreateWeb3Connection,
@@ -44,6 +45,7 @@ function joinNewQuorumNetwork(config, cb){
   let result = {
     joinOption: config.joinOption,
     localIpAddress: config.localIpAddress,
+    remoteIpAddress: config.remoteIpAddress,
     folders: ['Blockchain', 'Constellation'],
     constellationKeySetup: [
       {folderName: 'Constellation', fileName: 'node'},
@@ -242,20 +244,13 @@ function handleJoiningNewQuorumNetwork(localIpAddress, cb){
     console.log('3) Join the network as a participant')
     prompt.get(['option'], function (err, answer) {
       config.joinOption = answer.option
-
-      whisper.JoinCommunicationNetwork(config, function(err, result){
-        if (err) { return console('ERROR:', err) }
-        config.communicationNetwork = Object.assign({}, result)
-        joinNewQuorumNetwork(config, function(err, result){
-          if (err) { return console.log('ERROR:', err) }
-          let networks = {
-            quorumNetwork: Object.assign({}, result),
-            communicationNetwork: config.communicationNetwork
-          }
-          networks.quorumNetwork.localIpAddress = localIpAddress
-          networks.communicationNetwork.localIpAddress = localIpAddress
-          cb(err, networks)
-        })
+      joinNewQuorumNetwork(config, function(err, result){
+        if (err) { return console.log('ERROR:', err) }
+        let networks = {
+          quorumNetwork: Object.assign({}, result),
+          communicationNetwork: config.communicationNetwork
+        }
+        cb(err, networks)
       })
     })
   })

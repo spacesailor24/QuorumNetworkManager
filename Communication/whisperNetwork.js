@@ -332,6 +332,8 @@ function joinCommunicationNetwork(config, cb){
     +ports.remoteCommunicationNode
   }
 
+  console.log('Joining enode:', remoteEnode)
+
   console.log('[*] Joining communication network...');
   var seqFunction = async.seq(
     util.ClearDirectories,
