@@ -23,6 +23,7 @@ sudo mv /usr/bin/geth /usr/bin/normalGeth
 
 git clone https://github.com/jpmorganchase/quorum.git
 cd quorum/
+git checkout v1.2.1
 make all
 echo "PATH=\$PATH:"$PWD/build/bin >> ~/.bashrc
 source ~/.bashrc
