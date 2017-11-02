@@ -181,6 +181,7 @@ function postMessage(connection, to, responseString){
   });
 } 
 
+let peers = []
 function existingRaftNetworkMembership(result, cb){
   let request = 'request|existingRaftNetworkMembership'
 
@@ -193,13 +194,14 @@ function existingRaftNetworkMembership(result, cb){
     if(msg && msg.payload){
       message = util.Hex2a(msg.payload);
     } 
-    if(message && message.indexOf(request) >= 0){
+    if(!peers.contains(from) && message && message.indexOf(request) >= 0){
+      peers.push(msg.from)
       if(result.networkMembership == 'allowAll'){
         let messageTokens = message.split('|')
         let peerName = messageTokens[4]
         let from = msg.from // TODO: This needs to be added into a DB.
         let peerEnode = messageTokens[3]
-        web3RPCQuorum.raft.addPeer(peerEnode, function(err, raftID){ 
+        web3RPCQuorum.raft.addPeer(peerEnode, function(err, raftID){
           if(err){console.log('addPeer ERROR:', err)}
           console.log(peerName + ' has joined the network with raftID: '+raftID)
           let responseString = 'response|existingRaftNetworkMembership|ACCEPTED|'+raftID
