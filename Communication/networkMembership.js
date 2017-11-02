@@ -27,13 +27,13 @@ function requestExistingNetworkMembership(result, cb){
         "from": id,
         "topics": ["NetworkMembership"],
         "payload": hexString,
-        "ttl": 10,
+        "ttl": 5,
         "workToProve": 1
       }, function(err, res){
         if(err){console.log('err', err)}
       })
     }
-  }, 5000)
+  }, 6000)
 
   let networkFilter = shh.filter({"topics":["NetworkMembership"]}).watch(function(err, msg) {
     if(err){console.log("ERROR:", err)}
@@ -80,13 +80,13 @@ function requestNetworkMembership(result, cb){
         "from": id,
         "topics": ["NetworkMembership"],
         "payload": hexString,
-        "ttl": 10,
+        "ttl": 5,
         "workToProve": 1
       }, function(err, res){
         if(err){console.log('err', err)}
       })
     }
-  }, 5000)
+  }, 6000)
 
   let filter = shh.filter({"topics":["NetworkMembership"]}).watch(function(err, msg) {
     if(err){console.log("ERROR:", err)}
@@ -138,7 +138,7 @@ function allowAllNetworkMembershipRequests(result, msg, payload){
   web3RPC.shh.post({
     "topics": ["NetworkMembership"],
     "payload": hexString,
-    "ttl": 10,
+    "ttl": 5,
     "workToProve": 1,
     "to": from
   }, function(err, res){
@@ -173,7 +173,7 @@ function postMessage(connection, to, responseString){
   connection.shh.post({
     "topics": ["NetworkMembership"],
     "payload": hexString,
-    "ttl": 10,
+    "ttl": 5,
     "workToProve": 1,
     "to": to
   }, function(err, res){
@@ -194,7 +194,7 @@ function existingRaftNetworkMembership(result, cb){
     if(msg && msg.payload){
       message = util.Hex2a(msg.payload);
     } 
-    if(!peers.contains(from) && message && message.indexOf(request) >= 0){
+    if(!peers.contains(msg.from) && message && message.indexOf(request) >= 0){
       peers.push(msg.from)
       if(result.networkMembership == 'allowAll'){
         let messageTokens = message.split('|')
