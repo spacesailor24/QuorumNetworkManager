@@ -94,7 +94,10 @@ function requestNetworkMembership(result, cb){
     if(msg && msg.payload){
       message = util.Hex2a(msg.payload)
     }
-    if(message && message.indexOf('response|networkMembership') >= 0){
+    if(receivedNetworkMembership == false && 
+        message && 
+        message.indexOf('response|networkMembership') >= 0
+    ){
       receivedNetworkMembership = true
       let messageTokens = message.split('|')
       console.log('[*] Network membership:', messageTokens[2])
