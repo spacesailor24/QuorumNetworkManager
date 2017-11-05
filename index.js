@@ -47,7 +47,7 @@ function handleQuorumConsensus(){
   console.log('1) Start a new Quorum network [WARNING: this clears everything]');
   console.log('2) Join an existing Quorum network, first time joining this network. [WARNING: this clears everything]');
   console.log('3) Reconnect to the previously connected network');
-  console.log('5) killall geth constellation-node');
+  console.log('5) Kill all geth constellation-node');
   console.log('6) Display communication network connection details')
   console.log('0) Quit');
   prompt.get(['option'], function (err, result) {
@@ -137,7 +137,7 @@ function handleRaftConsensus(){
   console.log('----- Option 3 is for joining a raft network post initial setup  -----')
   console.log('3) Join a raft network if you were not part of the initial setup')
   console.log('4) TODO: Start whisper services and attach to already running node')
-  console.log('5) killall geth constellation-node');
+  console.log('5) Kill all geth constellation-node');
   console.log('0) Quit');
   prompt.get(['option'], function(err, result){
     if(result.option == 1){
