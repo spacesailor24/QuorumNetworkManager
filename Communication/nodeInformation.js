@@ -19,12 +19,14 @@ function publishNodeInformation(result, cb){
   let filePath =  c.folderName+'/'+c.publicKeyFileName
   let constellationPublicKey = fs.readFileSync(filePath, 'utf8')
 
+  let accountList = web3RPC.eth.accounts
+
   let nodeInfo = {
     whisperId: id,
     nodePubKey: result.nodePubKey,
     ipAddress: result.localIpAddress,
     nodeName: config.identity.nodeName,
-    address: result.addressList[0],
+    address: accountList[0],
     constellationPublicKey: constellationPublicKey
   }
      
