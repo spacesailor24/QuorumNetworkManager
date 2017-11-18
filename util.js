@@ -69,14 +69,16 @@ function waitForIPCPath(path, cb){
 }
 
 function waitForRPCConnection(web3RPC, cb){
-  if(web3RPC.isConnected() === true){
-    cb()
-  } else {
-    setTimeout(function(){
-      console.log('waiting for RPC connection ...')
-      waitForRPCConnection(web3RPC, cb)
-    }, 1000)
-  }
+  web3RPC.eth.net.isListening(function(err, isListening){
+    if(isListening === true){
+      cb()
+    } else {
+      setTimeout(function(){
+        console.log('waiting for RPC connection ...')
+        waitForRPCConnection(web3RPC, cb)
+      }, 1000)
+    }
+  })
 }
 
 // TODO: add error handler here for web3 connections so that program doesn't exit on error
