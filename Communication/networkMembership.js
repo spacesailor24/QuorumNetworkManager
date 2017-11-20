@@ -178,8 +178,7 @@ function networkMembershipRequestHandler(result, cb){
 
   whisperUtils.addBootstrapSubscription(["NetworkMembership"], web3RPC, onData)
 
-    cb(null, result);
-  })
+  cb(null, result);
 }
 
 function postMessage(connection, to, responseString){
