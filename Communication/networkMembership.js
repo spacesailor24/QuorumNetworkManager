@@ -146,9 +146,9 @@ function allowAllNetworkMembershipRequests(result, msg, payload){
 function networkMembershipRequestHandler(result, cb){
   let request = 'request|networkMembership'
 
-  let web3RPC = result.web3RPC;
-  web3RPC.shh.filter({"topics":["NetworkMembership"]}).watch(function(err, msg) {
-    if(err){console.log("ERROR:", err);};
+  let web3RPC = result.web3WSRPC;
+  web3RPC.shh.subscribe('messages', {"topics":["NetworkMembership"]}, function(err, msg) {
+    if(err){console.log("Network membership ERROR:", err);};
     let message = null;
     if(msg && msg.payload){
       message = util.Hex2a(msg.payload);
