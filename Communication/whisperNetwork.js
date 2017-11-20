@@ -29,7 +29,7 @@ function requestSomeEther(commWeb3RPC, address, cb){
 // TODO: Check from which address to send the ether, for now this defaults to eth.accounts[0]
 function addEtherResponseHandler(result, cb){
   var web3RPC = result.web3RPC;
-  var commWeb3RPC = result.communicationNetwork.web3RPC;
+  var commWeb3RPC = result.communicationNetwork.web3WSRPC;
   commWeb3RPC.shh.filter(messageString.BuildFilterObject(["Ether"])).watch(function(err, msg) {
     if(err){console.log("ERROR:", err);};
     var message = null;
@@ -65,7 +65,7 @@ function addEtherResponseHandler(result, cb){
 // This will broadcast this node's enode to any 'request|enode' message
 function addEnodeResponseHandler(result, cb){
   let web3IPC = result.web3IPC
-  let commWeb3RPC = result.communicationNetwork.web3RPC
+  let commWeb3RPC = result.communicationNetwork.web3WSRPC
   commWeb3RPC.shh.filter(messageString.BuildFilterObject(["Enode"])).watch(function(err, msg) {
     if(err){console.log("ERROR:", err)}
     var message = null
@@ -93,7 +93,7 @@ function addEnodeResponseHandler(result, cb){
 // This requests other nodes for their enode and then waits for a response
 function addEnodeRequestHandler(result, cb){
   var comm = result.communicationNetwork;
-  var shh = comm.web3RPC.shh;
+  var shh = comm.web3WSRPC.shh;
   
   var id = shh.newIdentity();
   var str = request.enode;
@@ -136,9 +136,10 @@ function copyCommunicationNodeKey(result, cb){
 // TODO: Add check whether requester has correct permissions
 function genesisConfigHandler(result, cb){
   let genesisPath = process.cwd() + '/quorum-genesis.json'
-  let web3RPC = result.web3RPC;
-  web3RPC.shh.filter(messageString.BuildFilterObject(['GenesisConfig'])).watch(function(err, msg) {
-    if(err){console.log("ERROR:", err);};
+  let web3RPC = result.web3WSRPC;
+  web3RPC.shh.subscribe('messages', messageString.BuildFilterObject(['GenesisConfig']), 
+      function(err, msg) {
+    if(err){console.log("Genesis config ERROR:", err);};
     if(result.genesisBlockConfigReady != true){
       return
     }
@@ -163,9 +164,9 @@ function genesisConfigHandler(result, cb){
 
 function staticNodesFileHandler(result, cb){
   let staticNodesPath = process.cwd() + '/Blockchain/static-nodes.json'
-  var web3RPC = result.web3RPC;
-  web3RPC.shh.filter(messageString.BuildFilterObject(['StaticNodes'])).watch(function(err, msg) {
-    if(err){console.log("ERROR:", err);};
+  var web3RPC = result.web3WSRPC;
+  web3RPC.shh.subscribe('messages', messageString.BuildFilterObject(['StaticNodes']), function(err, msg) {
+    if(err){console.log("Static nodes ERROR:", err);};
     if(result.staticNodesFileReady != true){
       return
     }
@@ -193,7 +194,7 @@ function getGenesisBlockConfig(result, cb){
 
   console.log('[*] Requesting genesis block config. This will block until the other node is online')
 
-  let shh = result.communicationNetwork.web3RPC.shh;
+  let shh = result.communicationNetwork.web3WSRPC.shh;
   
   let id = shh.newIdentity();
   let str = request.genesisConfig;
@@ -239,7 +240,7 @@ function getStaticNodesFile(result, cb){
 
   console.log('[*] Requesting static nodes file. This will block until the other node is online')
 
-  var shh = result.communicationNetwork.web3RPC.shh;
+  var shh = result.communicationNetwork.web3WSRPC.shh;
   
   var id = shh.newIdentity();
   var str = request.staticNodes;
@@ -285,6 +286,7 @@ function startCommunicationNode(result, cb){
   var cmd = './startCommunicationNode.sh';
   cmd += ' '+ports.communicationNodeRPC
   cmd += ' '+ports.communicationNode
+  cmd += ' '+ports.communicationNodeWS_RPC
   var child = exec(cmd, options);
   child.stdout.on('data', function(data){
     cb(null, result);
@@ -312,7 +314,8 @@ function startCommunicationNetwork(result, cb){
     networkMembership: result.networkMembership,
     folders: ['CommunicationNode', 'CommunicationNode/geth'], 
     "web3IPCHost": './CommunicationNode/geth.ipc',
-    "web3RPCProvider": 'http://localhost:'+ports.communicationNodeRPC
+    "web3RPCProvider": 'http://localhost:'+ports.communicationNodeRPC,
+    "web3WSRPCProvider": 'ws://localhost:'+ports.communicationNodeWS_RPC
   }
   networkSetup(config, function(err, commNet){
     if (err) { console.log('ERROR:', err) }
@@ -347,6 +350,7 @@ function joinCommunicationNetwork(config, cb){
     folders: ['CommunicationNode', 'CommunicationNode/geth'], 
     "web3IPCHost": './CommunicationNode/geth.ipc',
     "web3RPCProvider": 'http://localhost:'+ports.communicationNodeRPC,
+    "web3WSRPCProvider": 'ws://localhost:'+ports.communicationNodeWS_RPC,
     "enode": remoteEnode
   };
   seqFunction(result, function(err, commNet){
