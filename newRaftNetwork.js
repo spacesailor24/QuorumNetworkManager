@@ -20,6 +20,8 @@ function startRaftNode(result, cb){
   cmd += ' '+ports.gethNodeRPC
   cmd += ' '+ports.gethNode
   cmd += ' '+ports.raftHttp
+  cmd += ' '+ports.gethNodeWS_RPC
+  console.log('cmd:', cmd)
   let child = exec(cmd, options)
   child.stdout.on('data', function(data){
     cb(null, result)
@@ -148,7 +150,8 @@ function startNewRaftNetwork(config, cb){
       privateArchKeyFileName: 'nodeArch.key', 
     },
     "web3IPCHost": './Blockchain/geth.ipc',
-    "web3RPCProvider": 'http://localhost:'+ports.gethNodeRPC
+    "web3RPCProvider": 'http://localhost:'+ports.gethNodeRPC,
+    "web3WSRPCProvider": 'ws://localhost:'+ports.gethNodeWS_RPC
   }
 
   let seqFunction = async.seq(
