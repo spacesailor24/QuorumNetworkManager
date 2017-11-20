@@ -11,6 +11,7 @@ var nodeInformation = require('./nodeInformation.js');
 var messageString = require('./messageStrings.js');
 var request = messageString.Request;
 var response = messageString.Response;
+var whisperUtils = require('./whisperUtils.js')
 
 let whisperLog = 'whisperCommunications.log'
 
@@ -67,8 +68,8 @@ function addEtherResponseHandler(result, cb){
 function addEnodeResponseHandler(result, cb){
   let web3IPC = result.web3IPC
   let commWeb3RPC = result.communicationNetwork.web3WSRPC
-  commWeb3RPC.shh.filter(messageString.BuildFilterObject(["Enode"])).watch(function(err, msg) {
-    if(err){console.log("ERROR:", err)}
+  
+  function onData(msg){
     var message = null
     if(msg && msg.payload){
       message = util.Hex2a(msg.payload)
@@ -85,7 +86,10 @@ function addEnodeResponseHandler(result, cb){
         })
       })
     }
-  })
+  }
+
+  whisperUtils.addBootstrapSubscription(["Enode"], commWeb3RPC, onData)
+
   cb(null, result)
 }
 
@@ -122,7 +126,6 @@ function addEnodeRequestHandler(result, cb){
   cb(null, result);
 }
 
-
 function copyCommunicationNodeKey(result, cb){
   var cmd = 'cp communicationNodeKey CommunicationNode/geth/nodekey';
   var child = exec(cmd, function(){
@@ -134,54 +137,33 @@ function copyCommunicationNodeKey(result, cb){
   });
 }
 
-function getNetworkBootstrapKey(web3RPC, cb){
-  if(config.whisper.symKeyID){
-    cb(null, config.whisper.symKeyID)
-  } else {
-    let id = web3RPC.shh.generateSymKeyFromPassword(
-      config.whisper.symKeyPassword, function(err, id){
-      config.whisper.symKeyID = id
-      cb(err, config.whisper.symKeyID)
-    })
-  }
-}
-
 // TODO: Add check whether requester has correct permissions
 function genesisConfigHandler(result, cb){
   let genesisPath = process.cwd() + '/quorum-genesis.json'
   let web3RPC = result.web3WSRPC;
-  let topics = messageString.BuildFilterObject(["GenesisConfig"]).topics
-  
-  getNetworkBootstrapKey(web3RPC, function(err, symKeyID){
-    if(err){console.log('ERROR:', err)}
 
-    let subscription = web3RPC.shh.subscribe('messages', {topics, symKeyID}) 
-
-    subscription.on('data', function(msg){
-      if(result.genesisBlockConfigReady != true){
-        return
-      }
-      let message = null
-      if(msg && msg.payload){
-        message = util.Hex2a(msg.payload)
-      } 
-      if(message && message.indexOf(request.genesisConfig) >= 0){
-        fs.readFile(genesisPath, 'utf8', function(err, data){
-          if(err){console.log('ERROR:', err);}   
-          let genesisConfig = messageString.AppendData(response.genesisConfig, data);
-          let hexString = new Buffer(genesisConfig).toString('hex');        
-          let postObj = messageString.BuildPostObject(['GenesisConfig'], hexString, 10, 1);
-          web3RPC.shh.post(postObj.JSON, function(err, res){
-            if(err){console.log('err', err);}
-          });
+  function onData(msg){
+    if(result.genesisBlockConfigReady != true){
+      return
+    }
+    let message = null
+    if(msg && msg.payload){
+      message = util.Hex2a(msg.payload)
+    } 
+    if(message && message.indexOf(request.genesisConfig) >= 0){
+      fs.readFile(genesisPath, 'utf8', function(err, data){
+        if(err){console.log('ERROR:', err);}   
+        let genesisConfig = messageString.AppendData(response.genesisConfig, data);
+        let hexString = new Buffer(genesisConfig).toString('hex');        
+        let postObj = messageString.BuildPostObject(['GenesisConfig'], hexString, 10, 1);
+        web3RPC.shh.post(postObj.JSON, function(err, res){
+          if(err){console.log('err', err);}
         });
-      }
-    }) 
-
-    subscription.on('error', function(error){
-      console.log("Genesis config ERROR:", error)
-    }) 
-  })
+      });
+    }
+  }  
+  
+  whisperUtils.addBootstrapSubscription(["GenesisConfig"], web3RPC, onData)
 
   cb(null, result)
 }
@@ -189,38 +171,29 @@ function genesisConfigHandler(result, cb){
 function staticNodesFileHandler(result, cb){
   let staticNodesPath = process.cwd() + '/Blockchain/static-nodes.json'
   let web3RPC = result.web3WSRPC;
-  let topics = messageString.BuildFilterObject(['StaticNodes'])
-  
-  getNetworkBootstrapKey(web3RPC, function(err, symKeyID){
-    if(err){console.log('ERROR:', err)}
-  
-    let subscription = web3RPC.shh.subscribe('messages', {topics, symKeyID})
 
-    subscription.on('data', function(msg){
-      if(result.staticNodesFileReady != true){
-        return
-      }
-      var message = null;
-      if(msg && msg.payload){
-        message = util.Hex2a(msg.payload)
-      } 
-      if(message && message.indexOf(request.staticNodes) >= 0){
-        fs.readFile(staticNodesPath, 'utf8', function(err, data){
-          if(err){console.log('ERROR:', err)}
-          var staticNodes = messageString.AppendData(response.staticNodes, data)
-          var hexString = new Buffer(staticNodes).toString('hex')
-          var postObj = messageString.BuildPostObject(['StaticNodes'], hexString, 10, 1)
-          web3RPC.shh.post(postObj.JSON, function(err, res){
-            if(err){console.log('err', err)}
-          })
+  function onData(msg){
+    if(result.staticNodesFileReady != true){
+      return
+    }
+    var message = null;
+    if(msg && msg.payload){
+      message = util.Hex2a(msg.payload)
+    } 
+    if(message && message.indexOf(request.staticNodes) >= 0){
+      fs.readFile(staticNodesPath, 'utf8', function(err, data){
+        if(err){console.log('ERROR:', err)}
+        var staticNodes = messageString.AppendData(response.staticNodes, data)
+        var hexString = new Buffer(staticNodes).toString('hex')
+        var postObj = messageString.BuildPostObject(['StaticNodes'], hexString, 10, 1)
+        web3RPC.shh.post(postObj.JSON, function(err, res){
+          if(err){console.log('err', err)}
         })
-      }
-    }) 
+      })
+    }
+  }
 
-    subscription.on('error', function(error){
-      console.log("Static nodes ERROR:", error)
-    }) 
-  })
+  whisperUtils.addBootstrapSubscription(["StaticNodes"], web3RPC, onData)
 
   cb(null, result)
 }
