@@ -223,6 +223,40 @@ function createQuorumConfig(result, cb){
   });
 }
 
+function createRaftGenesisBlockConfig(result, cb){
+  let genesisTemplate = {
+    "alloc": {},
+    "coinbase": result.blockMakers[0],
+    "config": {
+      "homesteadBlock": 0,
+      "chainId": 1,
+      "eip155Block": null,
+      "eip158Block": null,
+      "isQuorum": true
+    },
+    "difficulty": "0x0",
+    "extraData": "0x0000000000000000000000000000000000000000000000000000000000000000",
+    "gasLimit": "0xE0000000",
+    "mixhash": "0x00000000000000000000000000000000000000647572616c65787365646c6578",
+    "nonce": "0x0",
+    "parentHash": "0x0000000000000000000000000000000000000000000000000000000000000000",
+    "timestamp": "0x00"
+  }
+
+  for(let key in result.blockMakers){
+    genesisTemplate.alloc[result.blockMakers[key]] = {
+      "balance": "1000000000000000000000000000"
+    }
+  }
+
+  let genesisConfig = JSON.stringify(genesisTemplate)
+
+  fs.writeFile('quorum-genesis.json', genesisConfig, 'utf8', function(err, res){
+    result.communicationNetwork.genesisBlockConfigReady = true;
+    cb(err, result);
+  })
+}
+
 function createGenesisBlockConfig(result, cb){
   var options = {encoding: 'utf8', timeout: 100*1000};
   var child = exec('quorum-genesis', options, function(error, stderr, stdout){
@@ -331,16 +365,17 @@ function unlockAllAccounts(result, cb){
   })
 }
 
-exports.Hex2a = hex2a;
-exports.ClearDirectories = clearDirectories;
-exports.CreateDirectories = createDirectories;
-exports.CreateWeb3Connection = createWeb3Connection;
-exports.ConnectToPeer = connectToPeer;
-exports.KillallGethConstellationNode = killallGethConstellationNode;
-exports.GetNewGethAccount = getNewGethAccount;
+exports.Hex2a = hex2a
+exports.ClearDirectories = clearDirectories
+exports.CreateDirectories = createDirectories
+exports.CreateWeb3Connection = createWeb3Connection
+exports.ConnectToPeer = connectToPeer
+exports.KillallGethConstellationNode = killallGethConstellationNode
+exports.GetNewGethAccount = getNewGethAccount
 exports.CheckPreviousCleanExit = checkPreviousCleanExit
 exports.CreateQuorumConfig = createQuorumConfig
 exports.CreateGenesisBlockConfig = createGenesisBlockConfig
+exports.CreateRaftGenesisBlockConfig = createRaftGenesisBlockConfig
 exports.IsWeb3RPCConnectionAlive = isWeb3RPCConnectionAlive
 exports.GenerateEnode = generateEnode
 exports.DisplayEnode = displayEnode
