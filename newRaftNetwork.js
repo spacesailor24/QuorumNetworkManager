@@ -21,7 +21,6 @@ function startRaftNode(result, cb){
   cmd += ' '+ports.gethNode
   cmd += ' '+ports.raftHttp
   cmd += ' '+ports.gethNodeWS_RPC
-  console.log('cmd:', cmd)
   let child = exec(cmd, options)
   child.stdout.on('data', function(data){
     cb(null, result)
