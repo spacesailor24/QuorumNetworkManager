@@ -16,7 +16,11 @@ config.ports.constellation = 9000
 
 config.identity = {}
 config.identity.nodeName = 'unset'
-config.identity.whisperId = null
+
+config.whisper = {}
+config.whisper.symKeyPassword = 'networkBootstrapPassword'
+config.whisper.symKeyID = null
+config.whisper.id = null
 
 // Change these for different setups. 
 config.setup = {}

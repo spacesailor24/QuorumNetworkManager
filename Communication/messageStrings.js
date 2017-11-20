@@ -37,6 +37,7 @@ function buildFilterObject(topics) {
   let hexTopics = []
   for(let topic of topics){
     let hexString = '0x' + new Buffer(topic).toString('hex')
+    hexString = hexString.substring(0, 10)
     hexTopics.push(hexString)
   }
   return {'topics': hexTopics}

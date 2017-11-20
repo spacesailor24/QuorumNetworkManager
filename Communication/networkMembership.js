@@ -3,6 +3,7 @@ const fs = require('fs')
 const util = require('../util.js')
 var config = require('../config.js')
 
+var messageString = require('./messageStrings.js');
 
 // TODO: Add to and from fields to validate origins
 function requestExistingNetworkMembership(result, cb){
@@ -143,25 +144,48 @@ function allowAllNetworkMembershipRequests(result, msg, payload){
   });
 }
 
+function getNetworkBootstrapKey(web3RPC, cb){
+  if(config.whisper.symKeyID){
+    cb(config.whisper.symKeyID)
+  } else {
+    let id = web3RPC.shh.generateSymKeyFromPassword(
+      config.whisper.symKeyPassword, function(err, id){
+      config.whisper.symKeyID = id
+      cb(err, config.whisper.symKeyID)
+    })
+  }
+}
+
 function networkMembershipRequestHandler(result, cb){
   let request = 'request|networkMembership'
 
   let web3RPC = result.web3WSRPC;
-  web3RPC.shh.subscribe('messages', {"topics":["NetworkMembership"]}, function(err, msg) {
-    if(err){console.log("Network membership ERROR:", err);};
-    let message = null;
-    if(msg && msg.payload){
-      message = util.Hex2a(msg.payload);
-    } 
-    if(message && message.indexOf(request) >= 0){
-      if(result.networkMembership == 'allowAll'){
-        allowAllNetworkMembershipRequests(result, msg, message.replace(request, ''))
-      } else if(result.networkMembership == 'allowOnlyPreAuth') {
-        // TODO
+  let topics = messageString.BuildFilterObject(["NetworkMembership"]).topics
+  getNetworkBootstrapKey(web3RPC, function(err, symKeyID){
+    if(err){console.log('ERROR:', err)}
+
+    let subscription = web3RPC.shh.subscribe('messages', {topics, symKeyID})
+
+    subscription.on('data', function(msg) {
+      let message = null;
+      if(msg && msg.payload){
+        message = util.Hex2a(msg.payload);
+      } 
+      if(message && message.indexOf(request) >= 0){
+        if(result.networkMembership == 'allowAll'){
+          allowAllNetworkMembershipRequests(result, msg, message.replace(request, ''))
+        } else if(result.networkMembership == 'allowOnlyPreAuth') {
+          // TODO
+        }
       }
-    }
-  });
-  cb(null, result);
+    })
+
+    subscription.on('error', function(error){
+      console.log("Network membership ERROR:", error)
+    })
+
+    cb(null, result);
+  })
 }
 
 function postMessage(connection, to, responseString){

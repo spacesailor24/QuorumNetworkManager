@@ -4,6 +4,7 @@ var async = require('async');
 
 var events = require('../eventEmitter.js');
 var util = require('../util.js');
+var config = require('../config.js')
 var ports = require('../config.js').ports
 var networkMembership = require('./networkMembership.js');
 var nodeInformation = require('./nodeInformation.js');
@@ -133,60 +134,95 @@ function copyCommunicationNodeKey(result, cb){
   });
 }
 
+function getNetworkBootstrapKey(web3RPC, cb){
+  if(config.whisper.symKeyID){
+    cb(null, config.whisper.symKeyID)
+  } else {
+    let id = web3RPC.shh.generateSymKeyFromPassword(
+      config.whisper.symKeyPassword, function(err, id){
+      config.whisper.symKeyID = id
+      cb(err, config.whisper.symKeyID)
+    })
+  }
+}
+
 // TODO: Add check whether requester has correct permissions
 function genesisConfigHandler(result, cb){
   let genesisPath = process.cwd() + '/quorum-genesis.json'
   let web3RPC = result.web3WSRPC;
-  web3RPC.shh.subscribe('messages', messageString.BuildFilterObject(['GenesisConfig']), 
-      function(err, msg) {
-    if(err){console.log("Genesis config ERROR:", err);};
-    if(result.genesisBlockConfigReady != true){
-      return
-    }
-    let message = null;
-    if(msg && msg.payload){
-      message = util.Hex2a(msg.payload);
-    } 
-    if(message && message.indexOf(request.genesisConfig) >= 0){
-      fs.readFile(genesisPath, 'utf8', function(err, data){
-        if(err){console.log('ERROR:', err);}   
-        let genesisConfig = messageString.AppendData(response.genesisConfig, data);
-        let hexString = new Buffer(genesisConfig).toString('hex');        
-        let postObj = messageString.BuildPostObject(['GenesisConfig'], hexString, 10, 1);
-        web3RPC.shh.post(postObj.JSON, function(err, res){
-          if(err){console.log('err', err);}
+  let topics = messageString.BuildFilterObject(["GenesisConfig"]).topics
+  
+  getNetworkBootstrapKey(web3RPC, function(err, symKeyID){
+    if(err){console.log('ERROR:', err)}
+
+    let subscription = web3RPC.shh.subscribe('messages', {topics, symKeyID}) 
+
+    subscription.on('data', function(msg){
+      if(result.genesisBlockConfigReady != true){
+        return
+      }
+      let message = null
+      if(msg && msg.payload){
+        message = util.Hex2a(msg.payload)
+      } 
+      if(message && message.indexOf(request.genesisConfig) >= 0){
+        fs.readFile(genesisPath, 'utf8', function(err, data){
+          if(err){console.log('ERROR:', err);}   
+          let genesisConfig = messageString.AppendData(response.genesisConfig, data);
+          let hexString = new Buffer(genesisConfig).toString('hex');        
+          let postObj = messageString.BuildPostObject(['GenesisConfig'], hexString, 10, 1);
+          web3RPC.shh.post(postObj.JSON, function(err, res){
+            if(err){console.log('err', err);}
+          });
         });
-      });
-    }
-  });
-  cb(null, result);
+      }
+    }) 
+
+    subscription.on('error', function(error){
+      console.log("Genesis config ERROR:", error)
+    }) 
+  })
+
+  cb(null, result)
 }
 
 function staticNodesFileHandler(result, cb){
   let staticNodesPath = process.cwd() + '/Blockchain/static-nodes.json'
-  var web3RPC = result.web3WSRPC;
-  web3RPC.shh.subscribe('messages', messageString.BuildFilterObject(['StaticNodes']), function(err, msg) {
-    if(err){console.log("Static nodes ERROR:", err);};
-    if(result.staticNodesFileReady != true){
-      return
-    }
-    var message = null;
-    if(msg && msg.payload){
-      message = util.Hex2a(msg.payload);
-    } 
-    if(message && message.indexOf(request.staticNodes) >= 0){
-      fs.readFile(staticNodesPath, 'utf8', function(err, data){
-        if(err){console.log('ERROR:', err);}   
-        var staticNodes = messageString.AppendData(response.staticNodes, data);
-        var hexString = new Buffer(staticNodes).toString('hex');        
-        var postObj = messageString.BuildPostObject(['StaticNodes'], hexString, 10, 1);
-        web3RPC.shh.post(postObj.JSON, function(err, res){
-          if(err){console.log('err', err);}
-        });
-      });
-    }
-  });
-  cb(null, result);
+  let web3RPC = result.web3WSRPC;
+  let topics = messageString.BuildFilterObject(['StaticNodes'])
+  
+  getNetworkBootstrapKey(web3RPC, function(err, symKeyID){
+    if(err){console.log('ERROR:', err)}
+  
+    let subscription = web3RPC.shh.subscribe('messages', {topics, symKeyID})
+
+    subscription.on('data', function(msg){
+      if(result.staticNodesFileReady != true){
+        return
+      }
+      var message = null;
+      if(msg && msg.payload){
+        message = util.Hex2a(msg.payload)
+      } 
+      if(message && message.indexOf(request.staticNodes) >= 0){
+        fs.readFile(staticNodesPath, 'utf8', function(err, data){
+          if(err){console.log('ERROR:', err)}
+          var staticNodes = messageString.AppendData(response.staticNodes, data)
+          var hexString = new Buffer(staticNodes).toString('hex')
+          var postObj = messageString.BuildPostObject(['StaticNodes'], hexString, 10, 1)
+          web3RPC.shh.post(postObj.JSON, function(err, res){
+            if(err){console.log('err', err)}
+          })
+        })
+      }
+    }) 
+
+    subscription.on('error', function(error){
+      console.log("Static nodes ERROR:", error)
+    }) 
+  })
+
+  cb(null, result)
 }
 
 // TODO: Add to and from fields to validate origins
