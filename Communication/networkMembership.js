@@ -176,7 +176,7 @@ function networkMembershipRequestHandler(result, cb){
     }
   }
 
-  whisperUtils.addBootstrapSubscription(["NetworkMembership"], web3RPC, onData)
+  whisperUtils.addBootstrapSubscription(["NetworkMembership"], web3RPC.shh, onData)
 
   cb(null, result);
 }
@@ -201,11 +201,11 @@ function existingRaftNetworkMembership(result, cb){
   let web3RPC = result.web3RPC
   let commWeb3RPC = result.communicationNetwork.web3RPC
   let web3RPCQuorum = result.web3RPCQuorum
-  commWeb3RPC.shh.filter({"topics":["NetworkMembership"]}).watch(function(err, msg) {
-    if(err){console.log("ERROR:", err);};
-    let message = null;
+
+  function onData(msg){
+    let message = null
     if(msg && msg.payload){
-      message = util.Hex2a(msg.payload);
+      message = util.Hex2a(msg.payload)
     } 
     if(message && message.indexOf(request) >= 0){
       if(result.networkMembership == 'allowAll'){
@@ -223,8 +223,11 @@ function existingRaftNetworkMembership(result, cb){
         // TODO
       }
     }
-  });
-  cb(null, result);
+  }
+
+  whisperUtils.addBootstrapSubscription(["NetworkMembership"], commWeb3RPC.shh, onData)
+
+  cb(null, result)
 }
 
 exports.RequestNetworkMembership = requestNetworkMembership
