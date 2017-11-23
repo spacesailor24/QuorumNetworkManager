@@ -20,6 +20,7 @@ config.identity.nodeName = 'unset'
 config.whisper = {}
 config.whisper.symKeyPassword = 'networkBootstrapPassword'
 config.whisper.symKeyID = null
+config.whisper.asymKeyID = null
 config.whisper.id = null
 
 // Change these for different setups. 
