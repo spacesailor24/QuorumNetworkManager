@@ -27,19 +27,25 @@ function lookAtBalances(result, cb){
 
     let commWeb3RPC = result.communicationNetwork.web3RPC
     let web3RPC = result.web3RPC
-    let accounts = accountDiff(web3RPC.eth.accounts, processedAccounts)
+    //console.log("WEB3RPC", web3RPC);
+    web3RPC.eth.getAccounts(async function(err, allAccounts) {
+      if(err) {console.log("ERROR:", err)}
+      let accounts = accountDiff(allAccounts, processedAccounts)
 
-    for(let i in accounts){
-      let account = accounts[i]
-      let balance = web3RPC.fromWei(web3RPC.eth.getBalance(account).toString(), 'ether')
-      // if balance is below threshold, request topup
-      if(balance < thresholdBalance){
-        whisper.RequestSomeEther(commWeb3RPC, account, function(){
-          processedAccounts.push(account)
-        })
-      }    
-    }
-    cb(true)
+      for(let i in accounts){
+        let account = accounts[i]
+        let amount = (await web3RPC.eth.getBalance(account)).toString()
+        //console.log("AMOUNT: ", amount)
+        let balance = web3RPC.utils.fromWei(amount, 'ether')
+        // if balance is below threshold, request topup
+        if(balance < thresholdBalance){
+          whisper.RequestSomeEther(commWeb3RPC, account, function(){
+            processedAccounts.push(account)
+          })
+        }    
+      }
+      cb(true)
+    });
   } else {
     cb(false)
   }
