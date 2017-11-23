@@ -76,11 +76,11 @@ function buildPostObject(shh, topic, payload, ttl, cb) {
 
 // interval specified in milliseconds
 function postAtInterval(message, shh, topic, interval, cb) {  
-  let hexMessage = new Buffer(message).toString('hex')
+  let hexMessage = '0x' + new Buffer(message).toString('hex')
   let hexTopic = buildTopicHexString(topic);
   buildPostObject(shh, hexTopic, hexMessage, 10, function() {
     let intervalID = setInterval(function(){
-      web3RPC.shh.post(postObj, function(err, res){
+      shh.post(postObj, function(err, res){
         if(err){console.log('err', err)}
       })
     }, interval)
