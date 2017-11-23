@@ -29,14 +29,14 @@ function addSubscription(symKeyID, topicArr, shh, onData){
   let subscription = shh.subscribe('messages', {topics, symKeyID})
   subscription.on('data', onData)
   subscription.on('error', function(error){
-    console.log('ERROR:', error)
+    console.log('addSubscription ERROR:', error)
   })
 }
 
 function addBootstrapSubscription(topics, shh, onData){
 
   getSymmetricKey(shh, function(err, symKeyID){
-    if(err){console.log('ERROR:', err)}
+    if(err){console.log('addBootstrapSubscription ERROR:', err)}
     addSubscription(symKeyID, topics, shh, onData) 
   })
 }
@@ -59,15 +59,19 @@ function buildFilterObject(topics) {
 // the individual parameters
 function buildPostObject(shh, topic, payload, ttl, cb) {
   getSymmetricKey(shh, function(err, symKeyID) {
-    if(err){console.log('ERROR:', err)}
+    if(err){console.log('getSymmetricKey ERROR:', err)}
     getAsymmetricKey(shh, function(err, sig) {
-      if(err){console.log('ERROR:', err)}
-      postObj = { 
+      if(err){console.log('getAsymmetricKey ERROR:', err)}
+      let powTime = config.whisper.powTime
+      let powTarget = config.whisper.powTarget
+      postObj = {
         symKeyID,
         sig,
         topic,
         payload,
-        ttl
+        ttl,
+        powTime,
+        powTarget
       };
       cb(null, postObj);
     });
@@ -81,7 +85,7 @@ function postAtInterval(message, shh, topic, interval, cb) {
   buildPostObject(shh, hexTopic, hexMessage, 10, function() {
     let intervalID = setInterval(function(){
       shh.post(postObj, function(err, res){
-        if(err){console.log('err', err)}
+        if(err){console.log('Post at interval ERROR:', err)}
       })
     }, interval)
     cb(null, intervalID);
