@@ -24,24 +24,24 @@ function getAsymmetricKey(shh, cb){
   }
 }
 
-function addSubscription(symKeyID, topicArr, web3RPC, onData){
+function addSubscription(symKeyID, topicArr, shh, onData){
   let topics = buildFilterObject(topicArr).topics
-  let subscription = web3RPC.shh.subscribe('messages', {topics, symKeyID})
+  let subscription = shh.subscribe('messages', {topics, symKeyID})
   subscription.on('data', onData)
   subscription.on('error', function(error){
     console.log('ERROR:', error)
   })
 }
 
-function addBootstrapSubscription(topics, web3RPC, onData){
+function addBootstrapSubscription(topics, shh, onData){
 
-  getSymmetricKey(web3RPC.shh, function(err, symKeyID){
+  getSymmetricKey(shh, function(err, symKeyID){
     if(err){console.log('ERROR:', err)}
-    addSubscription(symKeyID, topics, web3RPC, onData) 
+    addSubscription(symKeyID, topics, shh, onData) 
   })
 }
 
-function buildTopicString(topic) {
+function buildTopicHexString(topic) {
   let hexString = '0x' + new Buffer(topic).toString('hex')
   return hexString.substring(0, 10)
 }
@@ -49,7 +49,7 @@ function buildTopicString(topic) {
 function buildFilterObject(topics) {
   let hexTopics = []
   for(let topic of topics){
-    hexTopics.push(buildTopicString(topic))
+    hexTopics.push(buildTopicHexString(topic))
   }
   return {'topics': hexTopics}
 }
@@ -63,7 +63,7 @@ function buildPostObject(shh, topic, payload, ttl, cb) {
     getAsymmetricKey(shh, function(err, sig) {
       if(err){console.log('ERROR:', err)}
       postObj = { 
-        symkeyID,
+        symKeyID,
         sig,
         topic,
         payload,
@@ -76,8 +76,9 @@ function buildPostObject(shh, topic, payload, ttl, cb) {
 
 // interval specified in milliseconds
 function postAtInterval(message, shh, topic, interval, cb) {  
-  let hexString = new Buffer(message).toString('hex')
-  buildPostObject(shh, topic, hexString, 10, function() {
+  let hexMessage = new Buffer(message).toString('hex')
+  let hexTopic = buildTopicHexString(topic);
+  buildPostObject(shh, hexTopic, hexMessage, 10, function() {
     let intervalID = setInterval(function(){
       web3RPC.shh.post(postObj, function(err, res){
         if(err){console.log('err', err)}
@@ -87,5 +88,7 @@ function postAtInterval(message, shh, topic, interval, cb) {
   });
 }
 
+exports.getAsymmetricKey = getAsymmetricKey
 exports.addSubscription = addSubscription
 exports.addBootstrapSubscription = addBootstrapSubscription
+exports.postAtInterval = postAtInterval
