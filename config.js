@@ -22,6 +22,8 @@ config.whisper.symKeyPassword = 'networkBootstrapPassword'
 config.whisper.symKeyID = null
 config.whisper.asymKeyID = null
 config.whisper.id = null
+config.whisper.powTime = 3
+config.whisper.powTarget = 0.5
 
 // Change these for different setups. 
 config.setup = {}
