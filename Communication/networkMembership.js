@@ -199,7 +199,7 @@ function existingRaftNetworkMembership(result, cb){
   let request = 'request|existingRaftNetworkMembership'
 
   let web3RPC = result.web3RPC
-  let commWeb3RPC = result.communicationNetwork.web3RPC
+  let commWeb3RPC = result.communicationNetwork.web3WSRPC
   let web3RPCQuorum = result.web3RPCQuorum
 
   function onData(msg){
