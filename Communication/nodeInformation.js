@@ -12,8 +12,8 @@ var networkNodesInfo = {}
 // TODO: Add to and from fields to validate origins
 function publishNodeInformation(result, cb){
 
-  let web3RPC = result.web3WSRPC;
-  let shh = web3RPC.shh;
+  let web3RPC = result.web3RPC;
+  let shh = result.communicationNetwork.web3WSRPC.shh;
 
   var c = result.constellationConfigSetup
   let filePath =  c.folderName+'/'+c.publicKeyFileName
@@ -33,12 +33,11 @@ function publishNodeInformation(result, cb){
        
     let message = messageString.BuildDelimitedString(publish.nodeInfo, JSON.stringify(nodeInfo))
     whisperUtils.postAtInterval(message, shh, 'NodeInfo', 10*1000, function(err, intervalID) {
-      if(err){console.log('ERROR:', err)}
+      if(err){console.log('nodeInformation postAtInterval ERROR:', err)}
       nodeInformationPostIntervalID = intervalID
     });
 
-    function onData(err, msg) {
-      if(err){console.log("ERROR:", err)}
+    function onData(msg) {
       let message = null
       if(msg && msg.payload){
         message = util.Hex2a(msg.payload)
@@ -50,9 +49,7 @@ function publishNodeInformation(result, cb){
         if(nodePubKey === undefined){
           networkNodesInfo[receivedInfo.nodePubKey] = receivedInfo
           fs.writeFile('networkNodesInfo.json', JSON.stringify(networkNodesInfo), function(err){ 
-            if(err) {
-              console.log('ERROR:', err);
-            }
+            if(err) { console.log('Writing networkNodesInfo ERROR:', err) }
           })
         } else {
           // This info is already present, no need to add to networkNodesInfo
