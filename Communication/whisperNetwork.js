@@ -30,16 +30,16 @@ function requestSomeEther(commWeb3RPC, address, cb){
 // TODO: Maybe check that address is indeed in need of some ether before sending it some
 // TODO: Check from which address to send the ether, for now this defaults to eth.accounts[0]
 function addEtherResponseHandler(result, cb){
-  var web3RPC = result.web3RPC;
-  var commWeb3RPC = result.communicationNetwork.web3WSRPC;
-  commWeb3RPC.shh.filter(messageString.BuildFilterObject(["Ether"])).watch(function(err, msg) {
-    if(err){console.log("ERROR:", err);};
-    var message = null;
+  var web3RPC = result.web3RPC
+  var commWeb3RPC = result.communicationNetwork.web3WSRPC
+
+  function onData(msg){
+    var message = null
     if(msg && msg.payload){
-      message = util.Hex2a(msg.payload);
+      message = util.Hex2a(msg.payload)
     }
     if(message && message.indexOf(request.ether) >= 0){
-      var address = message.substring(request.ether.length+2);
+      var address = message.substring(request.ether.length+2)
 
       if(web3RPC.eth.accounts && web3RPC.eth.accounts.length > 0){  
         web3RPC.eth.getBalance(web3RPC.eth.accounts[0], function(err, balance){
@@ -50,16 +50,19 @@ function addEtherResponseHandler(result, cb){
               from: web3RPC.eth.accounts[0],
               to: address,
               value: web3RPC.toWei(1, 'ether')
-            };
+            }
             web3RPC.eth.sendTransaction(transaction, function(err, res){
-              if(err){console.log('err', err);}
-            });
+              if(err){console.log('err', err)}
+            })
           }
         })
       }           
     }
-  });
-  cb(null, result);
+  }
+
+  whisperUtils.addBootstrapSubscription(["Ether"], commWeb3RPC.shh, onData)
+
+  cb(null, result)
 }
 
 // TODO: Add to and from fields to validate origins & only respond to others requests
@@ -88,7 +91,7 @@ function addEnodeResponseHandler(result, cb){
     }
   }
 
-  whisperUtils.addBootstrapSubscription(["Enode"], commWeb3RPC, onData)
+  whisperUtils.addBootstrapSubscription(["Enode"], commWeb3RPC.shh, onData)
 
   cb(null, result)
 }
@@ -163,7 +166,7 @@ function genesisConfigHandler(result, cb){
     }
   }  
   
-  whisperUtils.addBootstrapSubscription(["GenesisConfig"], web3RPC, onData)
+  whisperUtils.addBootstrapSubscription(["GenesisConfig"], web3RPC.shh, onData)
 
   cb(null, result)
 }
@@ -193,7 +196,7 @@ function staticNodesFileHandler(result, cb){
     }
   }
 
-  whisperUtils.addBootstrapSubscription(["StaticNodes"], web3RPC, onData)
+  whisperUtils.addBootstrapSubscription(["StaticNodes"], web3RPC.shh, onData)
 
   cb(null, result)
 }
