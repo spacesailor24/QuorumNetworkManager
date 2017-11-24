@@ -116,7 +116,7 @@ function createWeb3Connection(result, cb){
     waitForRPCConnection(result.web3RPC, function(){
       result.web3IPC = createWeb3IPC(ipcProvider)
       // Web3 RPC Quorum
-      let Web3Quorum = require('web3quorum');
+      let Web3Quorum = require('web3-raft');
       let web3RPCQuorum = new Web3Quorum(httpProvider);
       result.web3RPCQuorum = web3RPCQuorum;
       console.log('[*] Node started')

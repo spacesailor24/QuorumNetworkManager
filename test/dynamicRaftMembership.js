@@ -163,10 +163,10 @@ describe("RAFT consensus", function() {
       let web3RPCQuorum = node2.raftNetwork.web3RPCQuorum
       expect(web3RPCQuorum).to.not.be.undefined
     })
-    /*it("should be elected as a verifier", function(){
-      let web3RPCQuorum = node2.raftNetwork.web3RPCQuorum
-      expect(web3RPCQuorum.raft.role).to.equal('verifier')
-    })*/
+    //it("should be elected as a verifier", function(){
+    //  let web3RPCQuorum = node2.raftNetwork.web3RPCQuorum
+    //  expect(web3RPCQuorum.raft.role).to.equal('verifier')
+    //})
     it("should have a web3IPC object", function(){
       let web3IPC = node2.raftNetwork.web3IPC
       expect(web3IPC).to.not.be.undefined

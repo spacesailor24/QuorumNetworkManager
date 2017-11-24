@@ -31,13 +31,16 @@ function addSubscription(symKeyID, topicArr, shh, onData){
   subscription.on('error', function(error){
     console.log('addSubscription ERROR:', error)
   })
+  return subscription
 }
 
-function addBootstrapSubscription(topics, shh, onData){
-
+function addBootstrapSubscription(topics, shh, onData, cb){
   getSymmetricKey(shh, function(err, symKeyID){
     if(err){console.log('addBootstrapSubscription ERROR:', err)}
-    addSubscription(symKeyID, topics, shh, onData) 
+    let subscription = addSubscription(symKeyID, topics, shh, onData) 
+    if(cb){
+      cb(null, subscription)
+    }
   })
 }
 

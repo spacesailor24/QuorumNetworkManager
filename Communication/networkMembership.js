@@ -11,51 +11,52 @@ function requestExistingNetworkMembership(result, cb){
 
   console.log('[*] Requesting existing network membership. This will block until the other node responds')
   
-  let shh = result.communicationNetwork.web3RPC.shh;
-  let id = shh.newIdentity();
-  
-  let request = "request|existingRaftNetworkMembership";
-  request += '|'+result.addressList[0] 
-  request += '|'+result.enodeList[0]
-  request += '|'+config.identity.nodeName
-  let hexString = new Buffer(request).toString('hex');
+  let shh = result.communicationNetwork.web3WSRPC.shh;
 
   let receivedNetworkMembership = false
-  let intervalID = setInterval(function(){
-    if(receivedNetworkMembership){
-      clearInterval(intervalID)
-    } else {
-      shh.post({
-        "from": id,
-        "topics": ["NetworkMembership"],
-        "payload": hexString,
-        "ttl": 10,
-        "workToProve": 1
-      }, function(err, res){
-        if(err){console.log('requestExistingNetworkMembership ERROR:', err)}
-      })
-    }
-  }, 5000)
+  let subscription = null
 
-  let networkFilter = shh.filter({"topics":["NetworkMembership"]}).watch(function(err, msg) {
-    if(err){console.log("ERROR:", err)}
+  function onData(msg){
     let message = null
     if(msg && msg.payload){
       message = util.Hex2a(msg.payload)
     }
     if(message && message.indexOf('response|existingRaftNetworkMembership') >= 0){
       receivedNetworkMembership = true
-      networkFilter.stopWatching() 
+      if(subscription){
+        subscription.unsubscribe(function(err, res){
+          if(err) { console.log('requestExistingNetworkMembership unsubscribe ERROR:', err) }
+          console.log('Unsubscribed!!')
+          subscription = null
+        })
+      }
       let messageTokens = message.split('|')
       console.log('[*] Network membership:', messageTokens[2])
       result.communicationNetwork.raftID = messageTokens[3]
       fs.writeFile('Blockchain/raftID', result.communicationNetwork.raftID, function(err){ 
-        if(err) {
-          console.log('ERROR:', err);
-        }
+        if(err) { console.log('requestExistingNetworkMembership write file ERROR:', err) }
         cb(null, result)
       })
     }
+  }
+
+  whisperUtils.addBootstrapSubscription(['NetworkMembership'], shh, onData, 
+    function(err, _subscription){
+    subscription = _subscription
+  })
+
+  let request = "request|existingRaftNetworkMembership";
+  request += '|'+result.addressList[0] 
+  request += '|'+result.enodeList[0]
+  request += '|'+config.identity.nodeName
+
+  whisperUtils.postAtInterval(request, shh, 'NetworkMembership', 5*1000, function(err, intervalID){
+    let checkNetworkMembership = setInterval(function(){
+      if(receivedNetworkMembership){
+        clearInterval(intervalID)
+        clearInterval(checkNetworkMembership)
+      } 
+    }, 1000)
   })
 }
 
@@ -213,7 +214,7 @@ function existingRaftNetworkMembership(result, cb){
         let peerName = messageTokens[4]
         let from = msg.from // TODO: This needs to be added into a DB.
         let peerEnode = messageTokens[3]
-        web3RPCQuorum.raft.addPeer(peerEnode, function(err, raftID){ 
+        web3RPCQuorum.addPeer(peerEnode, function(err, raftID){ 
           if(err){console.log('addPeer ERROR:', err)}
           console.log(peerName + ' has joined the network with raftID: '+raftID)
           let responseString = 'response|existingRaftNetworkMembership|ACCEPTED|'+raftID
