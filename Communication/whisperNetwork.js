@@ -18,11 +18,11 @@ let whisperLog = 'whisperCommunications.log'
 // TODO: Maybe check that address is indeed in need of some ether before sending it some
 // TODO: Check from which address to send the ether, for now this defaults to eth.accounts[0]
 function requestSomeEther(commWeb3RPC, address, cb){
-  var message = messageString.BuildDelimitedString(request.ether, address);
-  var hexString = new Buffer(message).toString('hex');        
-  var postObj = messageString.BuildPostObject(['Ether'], hexString, 10, 1);
-  commWeb3RPC.shh.post(postObj.JSON, function(err, res){
-    if(err){console.log('err', err);}
+  let shh = commWeb3RPC.shh
+  let message = messageString.BuildDelimitedString(request.ether, address)
+
+  whisperUtils.post(message, shh, 'Ether', function(err, res){
+    if(err){console.log('requestSomeEther ERROR:', err);}
     cb();
   });
 }
@@ -43,6 +43,7 @@ function addEtherResponseHandler(result, cb){
 
       if(web3RPC.eth.accounts && web3RPC.eth.accounts.length > 0){  
         web3RPC.eth.getBalance(web3RPC.eth.accounts[0], function(err, balance){
+          if(err){console.log('addEtherResponseHandler getBalance ERROR:', err)}
           let stringBalance = balance.toString()
           let intBalance = parseInt(stringBalance)
           if(intBalance > 0){
@@ -52,7 +53,7 @@ function addEtherResponseHandler(result, cb){
               value: web3RPC.toWei(1, 'ether')
             }
             web3RPC.eth.sendTransaction(transaction, function(err, res){
-              if(err){console.log('err', err)}
+              if(err){console.log('addEtherResponseHandler ERROR:', err)}
             })
           }
         })
@@ -79,13 +80,13 @@ function addEnodeResponseHandler(result, cb){
     }
     if(message && message.indexOf(request.enode) >= 0){
       web3IPC.admin.nodeInfo(function(err, nodeInfo){
-        if(err){console.log('ERROR:', err)}
+        if(err){console.log('addEnodeResponseHandler nodeInfo ERROR:', err)}
         var enodeResponse = messageString.AppendData(response.enode, nodeInfo.enode);
         enodeResponse = enodeResponse.replace('\[\:\:\]', result.localIpAddress)
         var hexString = new Buffer(enodeResponse).toString('hex')
         var postObj = messageString.BuildPostObject(['Enode'], hexString, 10, 1);
         commWeb3RPC.shh.post(postObj.JSON, function(err, res){
-          if(err){console.log('err', err);}
+          if(err){console.log('addEnodeResponseHandler post ERROR:', err);}
         })
       })
     }
@@ -110,7 +111,7 @@ function addEnodeRequestHandler(result, cb){
 
   setInterval(function(){
     shh.post(postObj.JSON, function(err, res){
-      if(err){console.log('err', err)}
+      if(err){console.log('addEnodeRequestHandler post ERROR:', err)}
     })
   }, 10*1000)
 
@@ -155,12 +156,12 @@ function genesisConfigHandler(result, cb){
     } 
     if(message && message.indexOf(request.genesisConfig) >= 0){
       fs.readFile(genesisPath, 'utf8', function(err, data){
-        if(err){console.log('ERROR:', err);}   
+        if(err){console.log('genesisConfigHandler readFile ERROR:', err);}   
         let genesisConfig = messageString.AppendData(response.genesisConfig, data);
         let hexString = new Buffer(genesisConfig).toString('hex');        
         let postObj = messageString.BuildPostObject(['GenesisConfig'], hexString, 10, 1);
         web3RPC.shh.post(postObj.JSON, function(err, res){
-          if(err){console.log('err', err);}
+          if(err){console.log('genesisConfigHandler post ERROR:', err);}
         });
       });
     }
@@ -185,12 +186,12 @@ function staticNodesFileHandler(result, cb){
     } 
     if(message && message.indexOf(request.staticNodes) >= 0){
       fs.readFile(staticNodesPath, 'utf8', function(err, data){
-        if(err){console.log('ERROR:', err)}
+        if(err){console.log('staticNodesFileHandler readFile ERROR:', err)}
         var staticNodes = messageString.AppendData(response.staticNodes, data)
         var hexString = new Buffer(staticNodes).toString('hex')
         var postObj = messageString.BuildPostObject(['StaticNodes'], hexString, 10, 1)
         web3RPC.shh.post(postObj.JSON, function(err, res){
-          if(err){console.log('err', err)}
+          if(err){console.log('staticNodesFileHandler post ERROR:', err)}
         })
       })
     }

@@ -78,21 +78,29 @@ function buildPostObject(shh, topic, payload, ttl, cb) {
   });
 }
 
-// interval specified in milliseconds
-function postAtInterval(message, shh, topic, interval, cb) {  
+function post(message, shh, topic, cb){
   let hexMessage = '0x' + new Buffer(message).toString('hex')
   let hexTopic = buildTopicHexString(topic);
-  buildPostObject(shh, hexTopic, hexMessage, 10, function() {
-    let intervalID = setInterval(function(){
-      shh.post(postObj, function(err, res){
-        if(err){console.log('Post at interval ERROR:', err)}
-      })
-    }, interval)
-    cb(null, intervalID);
+  buildPostObject(shh, hexTopic, hexMessage, 10, function(){
+    shh.post(postObj, function(err, res){
+      if(err){console.log('Whisper util post ERROR:', err)}
+      cb(err, res);
+    })
   });
+}
+
+// interval specified in milliseconds
+function postAtInterval(message, shh, topic, interval, cb) {
+  let intervalID = setInterval(function(){
+    post(message, shh, topic, function(err, res){
+      if(err){console.log('Post at interval ERROR:', err)}
+    })
+  }, interval)
+  cb(null, intervalID);
 }
 
 exports.getAsymmetricKey = getAsymmetricKey
 exports.addSubscription = addSubscription
 exports.addBootstrapSubscription = addBootstrapSubscription
+exports.post = post
 exports.postAtInterval = postAtInterval

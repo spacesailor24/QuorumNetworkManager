@@ -201,9 +201,9 @@ describe("RAFT consensus", function() {
   })
   after(function(done){
     process.chdir(parentPath)
-    /*util.KillallGethConstellationNode(function(){
+    util.KillallGethConstellationNode(function(){
       done()
-    })*/    
+    })    
   })
 })
 

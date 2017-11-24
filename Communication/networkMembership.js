@@ -32,7 +32,7 @@ function requestExistingNetworkMembership(result, cb){
         "ttl": 10,
         "workToProve": 1
       }, function(err, res){
-        if(err){console.log('err', err)}
+        if(err){console.log('requestExistingNetworkMembership ERROR:', err)}
       })
     }
   }, 5000)
@@ -85,7 +85,7 @@ function requestNetworkMembership(result, cb){
         "ttl": 10,
         "workToProve": 1
       }, function(err, res){
-        if(err){console.log('err', err)}
+        if(err){console.log('requestNetworkMembership ERROR:', err)}
       })
     }
   }, 5000)
@@ -141,7 +141,7 @@ function allowAllNetworkMembershipRequests(result, msg, payload){
     "workToProve": 1,
     "to": from
   }, function(err, res){
-    if(err){console.log('err', err);}
+    if(err){console.log('allowAllNetworkMembershipRequests ERROR:', err);}
   });
 }
 
@@ -191,7 +191,7 @@ function postMessage(connection, to, responseString){
     "workToProve": 1,
     "to": to
   }, function(err, res){
-    if(err){console.log('err', err);}
+    if(err){console.log('postMessage ERROR:', err);}
   });
 } 
 
