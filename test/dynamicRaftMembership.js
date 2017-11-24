@@ -26,8 +26,10 @@ describe("RAFT consensus", function() {
       node1Config.setup.automatedSetup = true
       node1Config.ports.communicationNode = 50000
       node1Config.ports.communicationNodeRPC = 50010
+      node1Config.ports.communicationNodeWS_RPC = 50020
       node1Config.ports.gethNode = 20000 
       node1Config.ports.gethNodeRPC = 20010
+      node1Config.ports.gethNodeWS_RPC = 20020
       node1Config.ports.raftHttp = node1Config.ports.gethNode + 20000
       node1Config.ports.constellation = 9000
       newRaftNetwork.HandleStartingNewRaftNetwork(node1Config.setup, function(err, result){
@@ -116,7 +118,7 @@ describe("RAFT consensus", function() {
       })
     })
   })
-  /*describe("Dynamic membership node", function() {
+  describe("Dynamic membership node", function() {
     it("Should start a dynamic raft membership node", function(done) {
       process.chdir(parentPath)
       process.chdir(node2Path)
@@ -127,8 +129,10 @@ describe("RAFT consensus", function() {
       node2Config.ports.communicationNode = 50002
       node2Config.ports.remoteCommunicationNode = 50000
       node2Config.ports.communicationNodeRPC = 50012
+      node2Config.ports.communicationNodeWS_RPC = 50022
       node2Config.ports.gethNode = 20002 
       node2Config.ports.gethNodeRPC = 20012
+      node2Config.ports.gethNodeWS_RPC = 20022
       node2Config.ports.raftHttp = node2Config.ports.gethNode + 20000
       node2Config.ports.constellation = 9002
       joinExisting.HandleJoiningRaftNetwork(node2Config.setup, function(err, result){
@@ -141,22 +145,28 @@ describe("RAFT consensus", function() {
       let web3RPC = node2.raftNetwork.web3RPC
       expect(web3RPC).to.not.be.undefined
     })
-    it("should be able to get accounts", function(){
+    it("should be able to get accounts", function(done){
       let web3RPC = node2.raftNetwork.web3RPC
-      expect(web3RPC.eth.accounts).to.be.an('array')
+      web3RPC.eth.accounts(function(err, accounts){
+        expect(accounts).to.be.an('array')
+        done()
+      })
     })
-    it("should be able to get blockNumber", function(){
+    it("should be able to get blockNumber", function(done){
       let web3RPC = node2.raftNetwork.web3RPC
-      expect(web3RPC.eth.blockNumber).to.equal(2)
+      web3RPC.eth.getBlockNumber(function(err, blockNumber){
+        expect(blockNumber).to.equal(2)
+        done()
+      })
     })
     it("should have a web3RPCQuorum object", function(){
       let web3RPCQuorum = node2.raftNetwork.web3RPCQuorum
       expect(web3RPCQuorum).to.not.be.undefined
     })
-    it("should be elected as a verifier", function(){
+    /*it("should be elected as a verifier", function(){
       let web3RPCQuorum = node2.raftNetwork.web3RPCQuorum
       expect(web3RPCQuorum.raft.role).to.equal('verifier')
-    })
+    })*/
     it("should have a web3IPC object", function(){
       let web3IPC = node2.raftNetwork.web3IPC
       expect(web3IPC).to.not.be.undefined
@@ -165,6 +175,7 @@ describe("RAFT consensus", function() {
       let web3IPC = node2.raftNetwork.web3IPC
       web3IPC.admin.peers(function(err, peers){
         if(err){console.log('ERROR:', err)}
+        console.log('node2 peers:', peers)
         expect(peers).to.be.an('array')
         expect(peers.length).to.equal(1)
         done()
@@ -180,15 +191,17 @@ describe("RAFT consensus", function() {
     })
     it("should be able to get balance of account", function(done){
       let web3RPC = node2.raftNetwork.web3RPC
-      let account1 = web3RPC.eth.accounts[1]
-      web3RPC.eth.getBalance(account1, function(err, balance){
-        if(err){console.log('ERROR:', err)}
-        let iBalance = Number(balance.toString())
-        expect(iBalance).to.equal(0)
-        done()
+      web3RPC.eth.getAccounts(function(err, accounts){
+        let account1 = accounts[1]
+        web3RPC.eth.getBalance(account1, function(err, balance){
+          if(err){console.log('ERROR:', err)}
+          let iBalance = Number(balance.toString())
+          expect(iBalance).to.equal(0)
+          done()
+        })
       })
     })
-  })*/
+  })
   before(function(done){
     setupDirectoriesAndFolders(node1Path)
     setupDirectoriesAndFolders(node2Path)
