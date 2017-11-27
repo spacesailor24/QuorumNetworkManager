@@ -26,7 +26,6 @@ function requestExistingNetworkMembership(result, cb){
       if(subscription){
         subscription.unsubscribe(function(err, res){
           if(err) { console.log('requestExistingNetworkMembership unsubscribe ERROR:', err) }
-          console.log('Unsubscribed!!')
           subscription = null
         })
       }
@@ -182,20 +181,6 @@ function networkMembershipRequestHandler(result, cb){
   cb(null, result);
 }
 
-function postMessage(connection, to, responseString){
-
-  let hexString = new Buffer(responseString).toString('hex');        
-  connection.shh.post({
-    "topics": ["NetworkMembership"],
-    "payload": hexString,
-    "ttl": 10,
-    "workToProve": 1,
-    "to": to
-  }, function(err, res){
-    if(err){console.log('postMessage ERROR:', err);}
-  });
-} 
-
 function existingRaftNetworkMembership(result, cb){
   let request = 'request|existingRaftNetworkMembership'
 
@@ -218,7 +203,7 @@ function existingRaftNetworkMembership(result, cb){
           if(err){console.log('addPeer ERROR:', err)}
           console.log(peerName + ' has joined the network with raftID: '+raftID)
           let responseString = 'response|existingRaftNetworkMembership|ACCEPTED|'+raftID
-          postMessage(commWeb3RPC, from, responseString)
+          whisperUtils.post(responseString, commWeb3RPC.shh, 'NetworkMembership')
         })
       } else if(result.networkMembership == 'allowOnlyPreAuth') {
         // TODO
