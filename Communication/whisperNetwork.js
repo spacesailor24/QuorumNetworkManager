@@ -158,12 +158,10 @@ function genesisConfigHandler(result, cb){
       fs.readFile(genesisPath, 'utf8', function(err, data){
         if(err){console.log('genesisConfigHandler readFile ERROR:', err);}   
         let genesisConfig = messageString.AppendData(response.genesisConfig, data);
-        let hexString = new Buffer(genesisConfig).toString('hex');        
-        let postObj = messageString.BuildPostObject(['GenesisConfig'], hexString, 10, 1);
-        web3RPC.shh.post(postObj.JSON, function(err, res){
+        whisperUtils.post(genesisConfig, web3RPC.shh, 'GenesisConfig', function(err, res){
           if(err){console.log('genesisConfigHandler post ERROR:', err);}
-        });
-      });
+        })
+      })
     }
   }  
   
@@ -188,9 +186,7 @@ function staticNodesFileHandler(result, cb){
       fs.readFile(staticNodesPath, 'utf8', function(err, data){
         if(err){console.log('staticNodesFileHandler readFile ERROR:', err)}
         var staticNodes = messageString.AppendData(response.staticNodes, data)
-        var hexString = new Buffer(staticNodes).toString('hex')
-        var postObj = messageString.BuildPostObject(['StaticNodes'], hexString, 10, 1)
-        web3RPC.shh.post(postObj.JSON, function(err, res){
+        whisperUtils.post(staticNodes, web3RPC.shh, 'StaticNodes', function(err, res){
           if(err){console.log('staticNodesFileHandler post ERROR:', err)}
         })
       })
@@ -208,26 +204,11 @@ function getGenesisBlockConfig(result, cb){
   console.log('[*] Requesting genesis block config. This will block until the other node is online')
 
   let shh = result.communicationNetwork.web3WSRPC.shh;
-  
-  let id = shh.newIdentity();
-  let str = request.genesisConfig;
-  let hexString = new Buffer(str).toString('hex');
-  let postObj = messageString.BuildPostObject(['GenesisConfig'], hexString, 10, 1, id);
 
   let receivedGenesisConfig = false
+  let subscription = null
 
-  let intervalID = setInterval(function(){
-    if(receivedGenesisConfig){
-      clearInterval(intervalID)
-    } else {
-      shh.post(postObj.JSON, function(err, res){
-        if(err){console.log('err', err)}
-      })
-    }
-  }, 5000)
-
-  let filter = shh.filter(postObj.filterObject).watch(function(err, msg) {
-    if(err){console.log("ERROR:", err)}
+  function onData(msg){
     let message = null
     if(msg && msg.payload){
       message = util.Hex2a(msg.payload)
@@ -236,7 +217,11 @@ function getGenesisBlockConfig(result, cb){
       console.log('received genesis config')
       if(receivedGenesisConfig == false){
         receivedGenesisConfig = true
-        filter.stopWatching()
+        if(subscription){
+          subscription.unsubscribe(function(err, res){
+            subscription = null
+          })
+        }
         let genesisConfig = message.replace(response.genesisConfig, '').substring(1)
         genesisConfig = genesisConfig.replace(/\\n/g, '')
         genesisConfig = genesisConfig.replace(/\\/g, '')
@@ -245,7 +230,21 @@ function getGenesisBlockConfig(result, cb){
         })
       }
     }
+  }
+
+  whisperUtils.addBootstrapSubscription(['GenesisConfig'], shh, onData, function(err, _subscription){
+    subscription = _subscription 
   })
+
+  let message = request.genesisConfig;
+  whisperUtils.postAtInterval(message, shh, 'GenesisConfig', 5*1000, function(err, intervalID){
+    let checkGenesisBlock = setInterval(function(){
+      if(receivedGenesisConfig){
+        clearInterval(intervalID)
+        clearInterval(checkGenesisBlock)
+      }
+    }, 1000)
+  }) 
 }
 
 // TODO: Add to and from fields to validate origins
@@ -253,27 +252,12 @@ function getStaticNodesFile(result, cb){
 
   console.log('[*] Requesting static nodes file. This will block until the other node is online')
 
-  var shh = result.communicationNetwork.web3WSRPC.shh;
+  let shh = result.communicationNetwork.web3WSRPC.shh;
+
+  let receivedStaticNodesFile = false
+  let subscription = null
   
-  var id = shh.newIdentity();
-  var str = request.staticNodes;
-  var hexString = new Buffer(str).toString('hex');
-  var postObj = messageString.BuildPostObject(['StaticNodes'], hexString, 10, 1, id);
-
-  var receivedStaticNodesFile = false
-
-  var intervalID = setInterval(function(){
-    if(receivedStaticNodesFile){
-      clearInterval(intervalID)
-    } else {
-      shh.post(postObj.JSON, function(err, res){
-        if(err){console.log('err', err)}
-      })
-    }
-  }, 5000)
-
-  var filter = shh.filter(postObj.filterObject).watch(function(err, msg) {
-    if(err){console.log("ERROR:", err)}
+  function onData(msg){
     var message = null
     if(msg && msg.payload){
       message = util.Hex2a(msg.payload)
@@ -282,7 +266,11 @@ function getStaticNodesFile(result, cb){
       console.log('received static nodes file')
       if(receivedStaticNodesFile == false){
         receivedStaticNodesFile = true
-        filter.stopWatching()
+        if(subscription){
+          subscription.unsubscribe(function(err, res){
+            subscription = null
+          })
+        }
         var staticNodesFile = message.replace(response.staticNodes, '').substring(1)
         staticNodesFile = staticNodesFile.replace(/\\n/g, '')
         staticNodesFile = staticNodesFile.replace(/\\/g, '')
@@ -291,7 +279,21 @@ function getStaticNodesFile(result, cb){
         })
       }
     }
+  }
+
+  whisperUtils.addBootstrapSubscription(['StaticNodes'], shh, onData, function(err, _subscription){
+    subscription = _subscription 
   })
+
+  let message = request.staticNodes;
+  whisperUtils.postAtInterval(message, shh, 'StaticNodes', 5*1000, function(err, intervalID){
+    let checkStaticNodes = setInterval(function(){
+      if(receivedStaticNodesFile){
+        clearInterval(intervalID)
+        clearInterval(checkStaticNodes)
+      }
+    }, 1000)
+  }) 
 }
 
 function startCommunicationNode(result, cb){

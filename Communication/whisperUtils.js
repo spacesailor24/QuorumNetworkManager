@@ -87,7 +87,9 @@ function post(message, shh, topic, cb){
   buildPostObject(shh, hexTopic, hexMessage, 10, function(){
     shh.post(postObj, function(err, res){
       if(err){console.log('Whisper util post ERROR:', err)}
-      cb(err, res);
+      if(cb){
+        cb(err, res);
+      }
     })
   });
 }

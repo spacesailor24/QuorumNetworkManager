@@ -147,7 +147,7 @@ describe("RAFT consensus", function() {
     })
     it("should be able to get accounts", function(done){
       let web3RPC = node2.raftNetwork.web3RPC
-      web3RPC.eth.accounts(function(err, accounts){
+      web3RPC.eth.getAccounts(function(err, accounts){
         expect(accounts).to.be.an('array')
         done()
       })
@@ -155,6 +155,7 @@ describe("RAFT consensus", function() {
     it("should be able to get blockNumber", function(done){
       let web3RPC = node2.raftNetwork.web3RPC
       web3RPC.eth.getBlockNumber(function(err, blockNumber){
+        if(err){console.log('get blocknumber ERROR:', err)}
         expect(blockNumber).to.equal(2)
         done()
       })
