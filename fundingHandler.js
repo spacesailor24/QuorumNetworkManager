@@ -39,10 +39,11 @@ function lookAtBalances(result, cb){
         let balance = web3RPC.utils.fromWei(amount, 'ether')
         // if balance is below threshold, request topup
         if(balance < thresholdBalance){
-          whisper.RequestSomeEther(commWeb3RPC, account, function(){
-            processedAccounts.push(account)
+          whisper.RequestSomeEther(commWeb3RPC, account, function(err, res){
           })
-        }    
+        }  else {
+          processedAccounts.push(account)
+        }   
       }
       cb(true)
     });

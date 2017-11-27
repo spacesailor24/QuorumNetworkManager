@@ -23,7 +23,7 @@ function requestSomeEther(commWeb3RPC, address, cb){
 
   whisperUtils.post(message, shh, 'Ether', function(err, res){
     if(err){console.log('requestSomeEther ERROR:', err);}
-    cb();
+    cb(err, res);
   });
 }
 
@@ -41,23 +41,25 @@ function addEtherResponseHandler(result, cb){
     if(message && message.indexOf(request.ether) >= 0){
       var address = message.substring(request.ether.length+2)
 
-      if(web3RPC.eth.accounts && web3RPC.eth.accounts.length > 0){  
-        web3RPC.eth.getBalance(web3RPC.eth.accounts[0], function(err, balance){
-          if(err){console.log('addEtherResponseHandler getBalance ERROR:', err)}
-          let stringBalance = balance.toString()
-          let intBalance = parseInt(stringBalance)
-          if(intBalance > 0){
-            var transaction = {
-              from: web3RPC.eth.accounts[0],
-              to: address,
-              value: web3RPC.toWei(1, 'ether')
+      web3RPC.eth.getAccounts(function(err, accounts){
+        if(accounts && accounts.length > 0){
+          web3RPC.eth.getBalance(accounts[0], function(err, balance){
+            if(err){console.log('addEtherResponseHandler getBalance ERROR:', err)}
+            let stringBalance = balance.toString()
+            let intBalance = parseInt(stringBalance)
+            if(intBalance > 0){
+              var transaction = {
+                from: accounts[0],
+                to: address,
+                value: (web3RPC.utils.toWei('1', 'ether')).toString()
+              }
+              web3RPC.eth.sendTransaction(transaction, function(err, res){
+                if(err){console.log('addEtherResponseHandler ERROR:', err)}
+              })
             }
-            web3RPC.eth.sendTransaction(transaction, function(err, res){
-              if(err){console.log('addEtherResponseHandler ERROR:', err)}
-            })
-          }
-        })
-      }           
+          })
+        }
+      })
     }
   }
 
