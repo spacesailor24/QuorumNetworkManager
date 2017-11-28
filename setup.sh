@@ -40,11 +40,6 @@ source ~/.bashrc
 export PATH=$PWD/constellation-0.1.0-ubuntu1604:$PATH
 
 cd ..
-git clone https://github.com/davebryson/quorum-genesis.git
-cd quorum-genesis/
-sudo npm install -g
-
-cd ..
 git clone https://github.com/consensys/QuorumNetworkManager.git
 cd QuorumNetworkManager/
 npm install

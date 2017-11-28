@@ -1,21 +1,21 @@
 {
-  "name": "basicquorum",
-  "version": "1.0.0",
-  "description": "1. Use this utility to generate quorum-genesis.json: https://github.com/davebryson/quorum-genesis",
+  "name": "quorumnetworkmanager",
+  "version": "0.6.0",
+  "description": "Create and manage Quorum networks",
   "main": "index.js",
   "scripts": {
     "test": "./node_modules/.bin/mocha --reporter spec"
   },
   "repository": {
     "type": "git",
-    "url": "git+https://github.com/coeniebeyers/BasicQuorum.git"
+    "url": "https://github.com/ConsenSys/QuorumNetworkManager.git"
   },
   "author": "",
-  "license": "ISC",
+  "license": "MIT",
   "bugs": {
-    "url": "https://github.com/coeniebeyers/BasicQuorum/issues"
+    "url": "https://github.com/ConsenSys/QuorumNetworkManager/issues"
   },
-  "homepage": "https://github.com/coeniebeyers/BasicQuorum#readme",
+  "homepage": "https://github.com/ConsenSys/QuorumNetworkManager/blob/master/README.md",
   "dependencies": {
     "async": "^2.1.5",
     "chai": "^4.1.2",

@@ -195,34 +195,6 @@ function checkPreviousCleanExit(cb){
   })
 }
 
-function createQuorumConfig(result, cb){
-  console.log('[*] Creating genesis config...');
-  var options = {encoding: 'utf8', timeout: 100*1000};
-  let voterList = ''
-  for(let bv of result.blockVoters){
-    voterList += '"'+bv+'",'
-  }
-  voterList = voterList.slice(0, -1)
-  let makerList = ''
-  for(let bm of result.blockMakers){
-    makerList += '"'+bm+'",'
-  }
-  makerList = makerList.slice(0, -1)
-  var config = '{'
-    +'"threshold": '+result.threshold+','
-    +'"voters": ['
-    + voterList
-    +'],'
-    +'"makers": ['
-    + makerList
-    +']'
-  +'}'
-  
-  fs.writeFile('quorum-config.json', config, function(err, res){
-    cb(err, result);
-  });
-}
-
 function createRaftGenesisBlockConfig(result, cb){
   let genesisTemplate = {
     "alloc": {},
@@ -255,18 +227,6 @@ function createRaftGenesisBlockConfig(result, cb){
     result.communicationNetwork.genesisBlockConfigReady = true;
     cb(err, result);
   })
-}
-
-function createGenesisBlockConfig(result, cb){
-  var options = {encoding: 'utf8', timeout: 100*1000};
-  var child = exec('quorum-genesis', options, function(error, stderr, stdout){
-    result.communicationNetwork.genesisBlockConfigReady = true;
-    cb(null, result);
-  });
-  child.stderr.on('data', function(error){
-    console.log('ERROR:', error);
-    cb(error, null);
-  });
 }
 
 function isWeb3RPCConnectionAlive(web3RPC){
@@ -373,8 +333,6 @@ exports.ConnectToPeer = connectToPeer
 exports.KillallGethConstellationNode = killallGethConstellationNode
 exports.GetNewGethAccount = getNewGethAccount
 exports.CheckPreviousCleanExit = checkPreviousCleanExit
-exports.CreateQuorumConfig = createQuorumConfig
-exports.CreateGenesisBlockConfig = createGenesisBlockConfig
 exports.CreateRaftGenesisBlockConfig = createRaftGenesisBlockConfig
 exports.IsWeb3RPCConnectionAlive = isWeb3RPCConnectionAlive
 exports.GenerateEnode = generateEnode

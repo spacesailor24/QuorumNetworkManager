@@ -1,9 +1,6 @@
 var prompt = require('prompt')
 
 var util = require('./util.js')
-var newNetworkSetup = require('./newNetworkSetup.js')
-var joinNewNetwork = require('./joinNewNetwork.js')
-var rejoinNetork = require('./rejoinNetwork.js')
 var newRaftNetwork = require('./newRaftNetwork.js')
 var joinRaftNetwork = require('./joinRaftNetwork.js')
 var joinExistingRaftNetwork = require('./joinExistingRaftNetwork.js')
@@ -12,14 +9,13 @@ var config = require('./config.js')
 
 prompt.start();
 // TODO: These global vars should be refactored
-var quorumNetwork = null
 var raftNetwork = null
 var communicationNetwork = null
 var localIpAddress = null
 var remoteIpAddress = null
 var checkForOtherProcesses = false
 
-var consensus = null //quorumChain or raft
+var consensus = null //RAFT or IBFT
 
 function handleConsensusChoice(){
   console.log('Please select an option:\n1) Raft\n2) QuorumChain [Disabled - this does not work on newer versions of Quorum]\n5) Kill all geth and constellation')
@@ -27,13 +23,9 @@ function handleConsensusChoice(){
     if(answer.option == 1){
       consensus = 'raft'
       mainLoop()
-    /*} else if (answer.option == 2){
-      consensus = 'quorumChain'
-      mainLoop()*/
     } else if(answer.option == 5){
       util.KillallGethConstellationNode(function(err, result){
         if (err) { return onErr(err); }
-        quorumNetwork = null;
         raftNetwork = null
         communicationNetwork = null;
         mainLoop()
@@ -42,57 +34,6 @@ function handleConsensusChoice(){
       handleConsensusChoice()
     }
   })
-}
-
-function handleQuorumConsensus(){
-  console.log('Please select an option below:');
-  console.log('1) Start a new Quorum network [WARNING: this clears everything]');
-  console.log('2) Join an existing Quorum network, first time joining this network. [WARNING: this clears everything]');
-  console.log('3) Reconnect to the previously connected network');
-  console.log('5) Kill all geth constellation-node');
-  console.log('6) Display communication network connection details')
-  console.log('0) Quit');
-  prompt.get(['option'], function (err, result) {
-    if (err) { return onErr(err); }
-    if(result.option == 1){
-      newNetworkSetup.HandleStartingNewQuorumNetwork(localIpAddress, function(err, networks){
-        quorumNetwork = networks.quorumNetwork
-        communicationNetwork = networks.communicationNetwork
-        mainLoop()
-      });
-    } else if(result.option == 2){
-      joinNewNetwork.HandleJoiningNewQuorumNetwork(localIpAddress, function(err, networks){
-        quorumNetwork = networks.quorumNetwork
-        communicationNetwork = networks.communicationNetwork
-        mainLoop();
-      });
-    } else if(result.option == 3){
-      rejoinNetork.HandleRejoiningQuorumNetwork(localIpAddress, function(err, networks){
-        quorumNetwork = networks.quorumNetwork
-        communicationNetwork = networks.communicationNetwork
-        mainLoop();
-      });
-    } else if(result.option == 5){
-      util.KillallGethConstellationNode(function(err, result){
-        if (err) { return onErr(err); }
-        quorumNetwork = null;
-        communicationNetwork = null;
-        mainLoop();
-      });      
-    } else if(result.option == 6){
-      console.log('Enode details:')
-      util.DisplayCommunicationEnode(communicationNetwork, function(err, result){
-        if(err){console.log('ERROR:', err)}
-        mainLoop()
-      })
-    } else if(result.option == 0){
-      console.log('Quiting');
-      process.exit(0);
-      return;
-    } else {
-      mainLoop();
-    }
-  });
 }
 
 function handleNetworkMembership(cb){
@@ -208,8 +149,6 @@ function mainLoop(){
       checkForOtherProcesses = done
       mainLoop()
     })
-  } else if(localIpAddress && checkForOtherProcesses && consensus === 'quorumChain'){
-    handleQuorumConsensus()
   } else if(localIpAddress && checkForOtherProcesses && consensus === 'raft'){
     handleRaftConsensus()
   } else if(localIpAddress && checkForOtherProcesses && consensus == null){
