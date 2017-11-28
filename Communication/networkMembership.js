@@ -147,18 +147,6 @@ function allowAllNetworkMembershipRequests(result, msg, payload){
   });
 }
 
-function getNetworkBootstrapKey(web3RPC, cb){
-  if(config.whisper.symKeyID){
-    cb(config.whisper.symKeyID)
-  } else {
-    let id = web3RPC.shh.generateSymKeyFromPassword(
-      config.whisper.symKeyPassword, function(err, id){
-      config.whisper.symKeyID = id
-      cb(err, config.whisper.symKeyID)
-    })
-  }
-}
-
 function networkMembershipRequestHandler(result, cb){
   let request = 'request|networkMembership'
 
