@@ -106,19 +106,13 @@ function addEnodeRequestHandler(result, cb){
   var comm = result.communicationNetwork;
   var shh = comm.web3WSRPC.shh;
   
-  var id = shh.newIdentity();
-  var str = request.enode;
-  var hexString = new Buffer(str).toString('hex');
-  var postObj = messageString.BuildPostObject(['Enode'], hexString, 10, 1, id);
+  var message = request.enode;
 
-  setInterval(function(){
-    shh.post(postObj.JSON, function(err, res){
-      if(err){console.log('addEnodeRequestHandler post ERROR:', err)}
-    })
-  }, 10*1000)
+  whisperUtils.postAtInterval(message, shh, 'Enode', 10*1000, function(err, intervalID){
+    if(err){console.log('addEnodeRequestHandler post ERROR:', err)}
+  })
 
-  var filter = shh.filter(postObj.filterObject).watch(function(err, msg) {
-    if(err){console.log("ERROR:", err);};
+  function onData(msg){
     var message = null;
     if(msg && msg.payload){
       message = util.Hex2a(msg.payload);
@@ -127,8 +121,10 @@ function addEnodeRequestHandler(result, cb){
       var enode = message.replace(response.enode, '').substring(1);
       events.emit('newEnode', enode);
     }
-  })
-  
+  }
+
+  whisperUtils.addBootstrapSubscription(['Enode'], shh, onData) 
+
   cb(null, result);
 }
 
