@@ -1,6 +1,7 @@
 //TODO: These can be overwritten with commandline variables passed when running setupFromConfig
 
-var config = {}
+let config = {}
+let env = process.env
 
 config.ports = {}
 config.ports.communicationNode = 50000
@@ -15,7 +16,7 @@ config.ports.devp2p = 30303
 config.ports.constellation = 9000
 
 config.identity = {}
-config.identity.nodeName = 'unset'
+config.identity.nodeName = env.NODE_NAME ? env.NODE_NAME : 'unset'
 
 config.whisper = {}
 config.whisper.symKeyPassword = 'networkBootstrapPassword'
@@ -28,21 +29,21 @@ config.whisper.powTarget = 0.5
 // Change these for different setups. 
 config.setup = {}
 // Enter ip address as a string
-config.setup.localIpAddress = '127.0.0.1'
+config.setup.localIpAddress = env.IP ? env.IP : '127.0.0.1'
 // Only allowAll for now
-config.setup.networkMembership = 'allowAll'
+config.setup.networkMembership = env.NETWORK_MEMBERSHIP ? env.NETWORK_MEMBERSHIP : 'allowAll'
 // Options are true or false
-config.setup.keepExistingFiles = false
+config.setup.keepExistingFiles = (env.KEEP_FILES == 'true')
 // Only raft supported for now
-config.setup.consensus = 'raft'
+config.setup.consensus = env.CONSENSUS ? env.CONSENSUS : 'raft'
 // Options are coordinator, non-coordinator, dynamicPeer
-config.setup.role = 'coordinator'
+config.setup.role = env.ROLE ? env.ROLE : 'coordinator'
 // Enodes that will be written to static-nodes.json if coordinator, comma separated strings
-config.setup.enodeList = []
+config.setup.enodeList = env.ENODE_LIST ? env.ENODE_LIST : []
 // Accounts that will be written to the genesis config if coordinator, comma separated strings
-config.setup.addressList = []
+config.setup.addressList = env.ADDRESS_LIST ? env.ADDRESS_LIST : []
 // Address of the coordinator, used if this node is not the coordinator
-config.setup.remoteIpAddress = '127.0.0.1'
+config.setup.remoteIpAddress = env.COORDINATING_IP ? env.COORDINATING_IP : '127.0.0.1'
 // This is changed to true if setupFromConfig.js is used
 config.setup.automatedSetup = false
 
