@@ -3,57 +3,59 @@ const fs = require('fs')
 const util = require('../util.js')
 var config = require('../config.js')
 
+var messageString = require('./messageStrings.js');
+var whisperUtils = require('./whisperUtils.js')
 
 // TODO: Add to and from fields to validate origins
 function requestExistingNetworkMembership(result, cb){
 
   console.log('[*] Requesting existing network membership. This will block until the other node responds')
   
-  let shh = result.communicationNetwork.web3RPC.shh;
-  let id = shh.newIdentity();
-  
-  let request = "request|existingRaftNetworkMembership";
-  request += '|'+result.addressList[0] 
-  request += '|'+result.enodeList[0]
-  request += '|'+config.identity.nodeName
-  let hexString = new Buffer(request).toString('hex');
+  let shh = result.communicationNetwork.web3WSRPC.shh;
 
   let receivedNetworkMembership = false
-  let intervalID = setInterval(function(){
-    if(receivedNetworkMembership){
-      clearInterval(intervalID)
-    } else {
-      shh.post({
-        "from": id,
-        "topics": ["NetworkMembership"],
-        "payload": hexString,
-        "ttl": 10,
-        "workToProve": 1
-      }, function(err, res){
-        if(err){console.log('err', err)}
-      })
-    }
-  }, 5000)
+  let subscription = null
 
-  let networkFilter = shh.filter({"topics":["NetworkMembership"]}).watch(function(err, msg) {
-    if(err){console.log("ERROR:", err)}
+  function onData(msg){
     let message = null
     if(msg && msg.payload){
       message = util.Hex2a(msg.payload)
     }
     if(message && message.indexOf('response|existingRaftNetworkMembership') >= 0){
       receivedNetworkMembership = true
-      networkFilter.stopWatching() 
+      if(subscription){
+        subscription.unsubscribe(function(err, res){
+          if(err) { console.log('requestExistingNetworkMembership unsubscribe ERROR:', err) }
+          subscription = null
+        })
+      }
       let messageTokens = message.split('|')
       console.log('[*] Network membership:', messageTokens[2])
       result.communicationNetwork.raftID = messageTokens[3]
       fs.writeFile('Blockchain/raftID', result.communicationNetwork.raftID, function(err){ 
-        if(err) {
-          console.log('ERROR:', err);
-        }
+        if(err) { console.log('requestExistingNetworkMembership write file ERROR:', err) }
         cb(null, result)
       })
     }
+  }
+
+  whisperUtils.addBootstrapSubscription(['NetworkMembership'], shh, onData, 
+    function(err, _subscription){
+    subscription = _subscription
+  })
+
+  let request = "request|existingRaftNetworkMembership";
+  request += '|'+result.addressList[0] 
+  request += '|'+result.enodeList[0]
+  request += '|'+config.identity.nodeName
+
+  whisperUtils.postAtInterval(request, shh, 'NetworkMembership', 5*1000, function(err, intervalID){
+    let checkNetworkMembership = setInterval(function(){
+      if(receivedNetworkMembership){
+        clearInterval(intervalID)
+        clearInterval(checkNetworkMembership)
+      } 
+    }, 1000)
   })
 }
 
@@ -62,44 +64,46 @@ function requestNetworkMembership(result, cb){
 
   console.log('[*] Requesting network membership. This will block until the other node responds')
   
-  let shh = result.communicationNetwork.web3RPC.shh;
-  let id = shh.newIdentity();
+  let shh = result.communicationNetwork.web3WSRPC.shh;
   
-  let request = "request|networkMembership";
-  request += '|'+result.addressList[0] 
-  request += '|'+result.enodeList[0]
-  request += '|'+config.identity.nodeName
-  let hexString = new Buffer(request).toString('hex');
-
   let receivedNetworkMembership = false
-  let intervalID = setInterval(function(){
-    if(receivedNetworkMembership){
-      clearInterval(intervalID)
-    } else {
-      shh.post({
-        "from": id,
-        "topics": ["NetworkMembership"],
-        "payload": hexString,
-        "ttl": 10,
-        "workToProve": 1
-      }, function(err, res){
-        if(err){console.log('err', err)}
-      })
-    }
-  }, 5000)
+  let subscription = null
 
-  let filter = shh.filter({"topics":["NetworkMembership"]}).watch(function(err, msg) {
-    if(err){console.log("ERROR:", err)}
+  function onData(msg){
     let message = null
     if(msg && msg.payload){
       message = util.Hex2a(msg.payload)
     }
     if(message && message.indexOf('response|networkMembership') >= 0){
       receivedNetworkMembership = true
+      if(subscription){
+        subscription.unsubscribe(function(err, res){
+          if(err) { console.log('requestNetworkMembership unsubscribe ERROR:', err) }
+          subscription = null
+        })
+      }
       let messageTokens = message.split('|')
       console.log('[*] Network membership:', messageTokens[2])
       cb(null, result)
     }
+  }
+
+  whisperUtils.addBootstrapSubscription(['NetworkMembership'], shh, onData, 
+    function(err, _subscription){
+    subscription = _subscription
+  })
+
+  let request = "request|networkMembership";
+  request += '|'+result.addressList[0] 
+  request += '|'+result.enodeList[0]
+  request += '|'+config.identity.nodeName
+  whisperUtils.postAtInterval(request, shh, 'NetworkMembership', 5*1000, function(err, intervalID){
+    let checkNetworkMembership = setInterval(function(){
+      if(receivedNetworkMembership){
+        clearInterval(intervalID)
+        clearInterval(checkNetworkMembership)
+      } 
+    }, 1000)
   })
 }
 
@@ -121,7 +125,7 @@ function addToEnodeList(result, enode){
 
 function allowAllNetworkMembershipRequests(result, msg, payload){
 
-  let web3RPC = result.web3RPC;
+  let shh = result.web3WSRPC.shh;
   let payloadTokens = payload.split('|')
   addToAddressList(result, payloadTokens[1])
   addToEnodeList(result, payloadTokens[2])
@@ -131,24 +135,17 @@ function allowAllNetworkMembershipRequests(result, msg, payload){
   let from = msg.from // TODO: This needs to be added into a DB.
 
   let responseString = 'response|networkMembership|ACCEPTED';
-  let hexString = new Buffer(responseString).toString('hex');        
-  web3RPC.shh.post({
-    "topics": ["NetworkMembership"],
-    "payload": hexString,
-    "ttl": 10,
-    "workToProve": 1,
-    "to": from
-  }, function(err, res){
-    if(err){console.log('err', err);}
-  });
+  whisperUtils.post(responseString, shh, 'NetworkMembership', function(err, res){
+    if(err){console.log('allowAllNetworkMembershipRequests ERROR:', err);}
+  })
 }
 
 function networkMembershipRequestHandler(result, cb){
   let request = 'request|networkMembership'
 
-  let web3RPC = result.web3RPC;
-  web3RPC.shh.filter({"topics":["NetworkMembership"]}).watch(function(err, msg) {
-    if(err){console.log("ERROR:", err);};
+  let web3RPC = result.web3WSRPC;
+
+  function onData(msg){
     let message = null;
     if(msg && msg.payload){
       message = util.Hex2a(msg.payload);
@@ -160,35 +157,24 @@ function networkMembershipRequestHandler(result, cb){
         // TODO
       }
     }
-  });
+  }
+
+  whisperUtils.addBootstrapSubscription(["NetworkMembership"], web3RPC.shh, onData)
+
   cb(null, result);
 }
-
-function postMessage(connection, to, responseString){
-
-  let hexString = new Buffer(responseString).toString('hex');        
-  connection.shh.post({
-    "topics": ["NetworkMembership"],
-    "payload": hexString,
-    "ttl": 10,
-    "workToProve": 1,
-    "to": to
-  }, function(err, res){
-    if(err){console.log('err', err);}
-  });
-} 
 
 function existingRaftNetworkMembership(result, cb){
   let request = 'request|existingRaftNetworkMembership'
 
   let web3RPC = result.web3RPC
-  let commWeb3RPC = result.communicationNetwork.web3RPC
+  let commWeb3RPC = result.communicationNetwork.web3WSRPC
   let web3RPCQuorum = result.web3RPCQuorum
-  commWeb3RPC.shh.filter({"topics":["NetworkMembership"]}).watch(function(err, msg) {
-    if(err){console.log("ERROR:", err);};
-    let message = null;
+
+  function onData(msg){
+    let message = null
     if(msg && msg.payload){
-      message = util.Hex2a(msg.payload);
+      message = util.Hex2a(msg.payload)
     } 
     if(message && message.indexOf(request) >= 0){
       if(result.networkMembership == 'allowAll'){
@@ -196,18 +182,21 @@ function existingRaftNetworkMembership(result, cb){
         let peerName = messageTokens[4]
         let from = msg.from // TODO: This needs to be added into a DB.
         let peerEnode = messageTokens[3]
-        web3RPCQuorum.raft.addPeer(peerEnode, function(err, raftID){ 
+        web3RPCQuorum.addPeer(peerEnode, function(err, raftID){ 
           if(err){console.log('addPeer ERROR:', err)}
           console.log(peerName + ' has joined the network with raftID: '+raftID)
           let responseString = 'response|existingRaftNetworkMembership|ACCEPTED|'+raftID
-          postMessage(commWeb3RPC, from, responseString)
+          whisperUtils.post(responseString, commWeb3RPC.shh, 'NetworkMembership')
         })
       } else if(result.networkMembership == 'allowOnlyPreAuth') {
         // TODO
       }
     }
-  });
-  cb(null, result);
+  }
+
+  whisperUtils.addBootstrapSubscription(["NetworkMembership"], commWeb3RPC.shh, onData)
+
+  cb(null, result)
 }
 
 exports.RequestNetworkMembership = requestNetworkMembership

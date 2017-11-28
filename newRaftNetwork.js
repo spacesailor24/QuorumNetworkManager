@@ -17,15 +17,16 @@ function startRaftNode(result, cb){
   console.log('[*] Starting raft node...')
   let options = {encoding: 'utf8', timeout: 100*1000}
   let cmd = './startRaftNode.sh'
-  cmd += ' '+ports.gethNodeRPC
   cmd += ' '+ports.gethNode
+  cmd += ' '+ports.gethNodeRPC
+  cmd += ' '+ports.gethNodeWS_RPC
   cmd += ' '+ports.raftHttp
   let child = exec(cmd, options)
   child.stdout.on('data', function(data){
     cb(null, result)
   })
   child.stderr.on('data', function(error){
-    console.log('ERROR:', error)
+    console.log('Start raft node ERROR:', error)
     cb(error, null)
   })
 }
@@ -107,8 +108,7 @@ function handleNetworkConfiguration(result, cb){
       getConfiguration,
       util.GetNewGethAccount,
       addAddresslistToQuorumConfig,
-      util.CreateQuorumConfig,
-      util.CreateGenesisBlockConfig,
+      util.CreateRaftGenesisBlockConfig,
       constellation.CreateNewKeys, 
       constellation.CreateConfig
     )
@@ -148,7 +148,8 @@ function startNewRaftNetwork(config, cb){
       privateArchKeyFileName: 'nodeArch.key', 
     },
     "web3IPCHost": './Blockchain/geth.ipc',
-    "web3RPCProvider": 'http://localhost:'+ports.gethNodeRPC
+    "web3RPCProvider": 'http://localhost:'+ports.gethNodeRPC,
+    "web3WSRPCProvider": 'ws://localhost:'+ports.gethNodeWS_RPC
   }
 
   let seqFunction = async.seq(

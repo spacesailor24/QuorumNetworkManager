@@ -34,7 +34,13 @@ function buildPostObject(topics, payload, ttl, workToProve, id) {
 }
 
 function buildFilterObject(topics) {
-  return {'topics': topics};
+  let hexTopics = []
+  for(let topic of topics){
+    let hexString = '0x' + new Buffer(topic).toString('hex')
+    hexString = hexString.substring(0, 10)
+    hexTopics.push(hexString)
+  }
+  return {'topics': hexTopics}
 }
 
 request = {

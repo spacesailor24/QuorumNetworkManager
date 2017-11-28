@@ -21,8 +21,9 @@ function displayGethAccount(result, cb){
 function startRaftNode(result, cb){
   let options = {encoding: 'utf8', timeout: 100*1000}
   let cmd = './startRaftNode.sh'
-  cmd += ' '+ports.gethNodeRPC
   cmd += ' '+ports.gethNode
+  cmd += ' '+ports.gethNodeRPC
+  cmd += ' '+ports.gethNodeWS_RPC
   cmd += ' '+ports.raftHttp
   let child = exec(cmd, options)
   child.stdout.on('data', function(data){

@@ -6,15 +6,24 @@ config.ports = {}
 config.ports.communicationNode = 50000
 config.ports.remoteCommunicationNode = 50000
 config.ports.communicationNodeRPC = 50010
+config.ports.communicationNodeWS_RPC = 50020
 config.ports.gethNode = 20000 // Changing this will change the raftHttp port!
 config.ports.gethNodeRPC = 20010
+config.ports.gethNodeWS_RPC = 20020
 config.ports.raftHttp = config.ports.gethNode + 20000  // This is a requirement from raftHttp!
 config.ports.devp2p = 30303
 config.ports.constellation = 9000
 
 config.identity = {}
 config.identity.nodeName = 'unset'
-config.identity.whisperId = null
+
+config.whisper = {}
+config.whisper.symKeyPassword = 'networkBootstrapPassword'
+config.whisper.symKeyID = null
+config.whisper.asymKeyID = null
+config.whisper.id = null
+config.whisper.powTime = 3
+config.whisper.powTarget = 0.5
 
 // Change these for different setups. 
 config.setup = {}

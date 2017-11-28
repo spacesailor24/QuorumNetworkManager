@@ -22,14 +22,14 @@ var checkForOtherProcesses = false
 var consensus = null //quorumChain or raft
 
 function handleConsensusChoice(){
-  console.log('Please select an option:\n1) Raft\n2) QuorumChain\n5) Kill all geth and constellation')
+  console.log('Please select an option:\n1) Raft\n2) QuorumChain [Disabled - this does not work on newer versions of Quorum]\n5) Kill all geth and constellation')
   prompt.get(['option'], function(err, answer){
     if(answer.option == 1){
       consensus = 'raft'
       mainLoop()
-    } else if (answer.option == 2){
+    /*} else if (answer.option == 2){
       consensus = 'quorumChain'
-      mainLoop()
+      mainLoop()*/
     } else if(answer.option == 5){
       util.KillallGethConstellationNode(function(err, result){
         if (err) { return onErr(err); }
@@ -38,6 +38,8 @@ function handleConsensusChoice(){
         communicationNetwork = null;
         mainLoop()
       })      
+    } else {
+      handleConsensusChoice()
     }
   })
 }

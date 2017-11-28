@@ -68,44 +68,58 @@ function waitForIPCPath(path, cb){
   }
 }
 
+function createWeb3IPC(ipcProvider){
+  let Web3IPC = require('web3_ipc');
+  let options = {
+    host: ipcProvider,
+    ipc: true,
+    personal: true,
+    admin: true,
+    debug: false
+  };
+  let web3IPC = Web3IPC.create(options);
+  let web3IPCConnection = web3IPC.currentProvider.connection
+  return web3IPC
+}
+
 function waitForRPCConnection(web3RPC, cb){
-  if(web3RPC.isConnected() === true){
-    cb()
-  } else {
-    setTimeout(function(){
-      console.log('waiting for RPC connection ...')
-      waitForRPCConnection(web3RPC, cb)
-    }, 1000)
-  }
+  web3RPC.eth.net.isListening(function(err, isListening){
+    if(isListening === true){
+      console.log('[*] RPC connection established')
+      cb()
+    } else {
+      setTimeout(function(){
+        console.log('waiting for RPC connection ...')
+        waitForRPCConnection(web3RPC, cb)
+      }, 1000)
+    }
+  })
 }
 
 // TODO: add error handler here for web3 connections so that program doesn't exit on error
 function createWeb3Connection(result, cb){
-  let host = result.web3IPCHost;
-  waitForIPCPath(host, function(){
-    // Web3 RPC
+  let ipcProvider = result.web3IPCHost;
+  waitForIPCPath(ipcProvider, function(){
+    // Web3 WS RPC
+    let web3WSRPC
+    if(result.web3WSRPCProvider){
+      let wsProvider = result.web3WSRPCProvider;
+      let Web3 = require('web3');
+      web3WSRPC = new Web3(wsProvider);
+      result.web3WSRPC = web3WSRPC;
+    }
+    // Web3 http RPC
     let httpProvider = result.web3RPCProvider;
     let Web3RPC = require('web3');
-    let web3RPC = new Web3RPC(new Web3RPC.providers.HttpProvider(httpProvider));
-    result.web3RPC = web3RPC;
-    waitForRPCConnection(web3RPC, function(){ 
-      console.log('[*] RPC connection established, Node started')
-      // Web3 IPC
-      let Web3IPC = require('web3_ipc');
-      let options = {
-        host: host,
-        ipc: true,
-        personal: true,
-        admin: true,
-        debug: false
-      };
-      let web3IPC = Web3IPC.create(options);
-      let web3IPCConnection = web3IPC.currentProvider.connection
-      result.web3IPC = web3IPC;
+    let web3RPC = new Web3RPC(httpProvider);
+    result.web3RPC = web3RPC
+    waitForRPCConnection(result.web3RPC, function(){
+      result.web3IPC = createWeb3IPC(ipcProvider)
       // Web3 RPC Quorum
-      let Web3RPCQuorum = require('web3quorum');
-      let web3RPCQuorum = new Web3RPCQuorum(new Web3RPCQuorum.providers.HttpProvider(httpProvider));
+      let Web3Quorum = require('web3-raft');
+      let web3RPCQuorum = new Web3Quorum(httpProvider);
       result.web3RPCQuorum = web3RPCQuorum;
+      console.log('[*] Node started')
       cb(null, result);
     })
   })
@@ -207,6 +221,40 @@ function createQuorumConfig(result, cb){
   fs.writeFile('quorum-config.json', config, function(err, res){
     cb(err, result);
   });
+}
+
+function createRaftGenesisBlockConfig(result, cb){
+  let genesisTemplate = {
+    "alloc": {},
+    "coinbase": result.blockMakers[0],
+    "config": {
+      "homesteadBlock": 0,
+      "chainId": 1,
+      "eip155Block": null,
+      "eip158Block": null,
+      "isQuorum": true
+    },
+    "difficulty": "0x0",
+    "extraData": "0x0000000000000000000000000000000000000000000000000000000000000000",
+    "gasLimit": "0xE0000000",
+    "mixhash": "0x00000000000000000000000000000000000000647572616c65787365646c6578",
+    "nonce": "0x0",
+    "parentHash": "0x0000000000000000000000000000000000000000000000000000000000000000",
+    "timestamp": "0x00"
+  }
+
+  for(let key in result.blockMakers){
+    genesisTemplate.alloc[result.blockMakers[key]] = {
+      "balance": "1000000000000000000000000000"
+    }
+  }
+
+  let genesisConfig = JSON.stringify(genesisTemplate)
+
+  fs.writeFile('quorum-genesis.json', genesisConfig, 'utf8', function(err, res){
+    result.communicationNetwork.genesisBlockConfigReady = true;
+    cb(err, result);
+  })
 }
 
 function createGenesisBlockConfig(result, cb){
@@ -317,16 +365,17 @@ function unlockAllAccounts(result, cb){
   })
 }
 
-exports.Hex2a = hex2a;
-exports.ClearDirectories = clearDirectories;
-exports.CreateDirectories = createDirectories;
-exports.CreateWeb3Connection = createWeb3Connection;
-exports.ConnectToPeer = connectToPeer;
-exports.KillallGethConstellationNode = killallGethConstellationNode;
-exports.GetNewGethAccount = getNewGethAccount;
+exports.Hex2a = hex2a
+exports.ClearDirectories = clearDirectories
+exports.CreateDirectories = createDirectories
+exports.CreateWeb3Connection = createWeb3Connection
+exports.ConnectToPeer = connectToPeer
+exports.KillallGethConstellationNode = killallGethConstellationNode
+exports.GetNewGethAccount = getNewGethAccount
 exports.CheckPreviousCleanExit = checkPreviousCleanExit
 exports.CreateQuorumConfig = createQuorumConfig
 exports.CreateGenesisBlockConfig = createGenesisBlockConfig
+exports.CreateRaftGenesisBlockConfig = createRaftGenesisBlockConfig
 exports.IsWeb3RPCConnectionAlive = isWeb3RPCConnectionAlive
 exports.GenerateEnode = generateEnode
 exports.DisplayEnode = displayEnode
