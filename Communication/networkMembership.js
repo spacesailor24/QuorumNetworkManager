@@ -64,7 +64,7 @@ function requestNetworkMembership(result, cb){
 
   console.log('[*] Requesting network membership. This will block until the other node responds')
   
-  let shh = result.communicationNetwork.web3WeRPtNetworkMembership.shh;
+  let shh = result.communicationNetwork.web3WSRPC.shh;
   
   let receivedNetworkMembership = false
   let subscription = null
