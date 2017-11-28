@@ -125,7 +125,7 @@ function addToEnodeList(result, enode){
 
 function allowAllNetworkMembershipRequests(result, msg, payload){
 
-  let web3RPC = result.web3RPC;
+  let shh = result.web3WSRPC.shh;
   let payloadTokens = payload.split('|')
   addToAddressList(result, payloadTokens[1])
   addToEnodeList(result, payloadTokens[2])
@@ -135,16 +135,9 @@ function allowAllNetworkMembershipRequests(result, msg, payload){
   let from = msg.from // TODO: This needs to be added into a DB.
 
   let responseString = 'response|networkMembership|ACCEPTED';
-  let hexString = new Buffer(responseString).toString('hex');        
-  web3RPC.shh.post({
-    "topics": ["NetworkMembership"],
-    "payload": hexString,
-    "ttl": 10,
-    "workToProve": 1,
-    "to": from
-  }, function(err, res){
+  whisperUtils.post(responseString, shh, 'NetworkMembership', function(err, res){
     if(err){console.log('allowAllNetworkMembershipRequests ERROR:', err);}
-  });
+  })
 }
 
 function networkMembershipRequestHandler(result, cb){
