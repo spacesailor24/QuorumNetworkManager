@@ -5,7 +5,7 @@ function getSymmetricKey(shh, cb){
   if(config.whisper.symKeyID){
     cb(null, config.whisper.symKeyID)
   } else {
-    let id = shh.generateSymKeyFromPassword(
+    shh.generateSymKeyFromPassword(
       config.whisper.symKeyPassword, function(err, id){
       config.whisper.symKeyID = id
       cb(err, config.whisper.symKeyID)
@@ -17,7 +17,7 @@ function getAsymmetricKey(shh, cb){
   if(config.whisper.asymKeyID){
     cb(null, config.whisper.asymKeyID)
   } else {
-    let id = shh.newKeyPair(function(err, id){
+    shh.newKeyPair(function(err, id){
       config.whisper.asymKeyID = id
       cb(err, config.whisper.asymKeyID)
     })
@@ -37,7 +37,7 @@ function addSubscription(symKeyID, topicArr, shh, onData){
 function addBootstrapSubscription(topics, shh, onData, cb){
   getSymmetricKey(shh, function(err, symKeyID){
     if(err){console.log('addBootstrapSubscription ERROR:', err)}
-    let subscription = addSubscription(symKeyID, topics, shh, onData) 
+    let subscription = addSubscription(symKeyID, topics, shh, onData)
     if(cb){
       cb(null, subscription)
     }
@@ -58,7 +58,7 @@ function buildFilterObject(topics) {
 }
 
 // TODO: this can be improved to take in some defaults for ttl and workToProve
-// TODO: this can also perhaps have the option between an object with the parameters or 
+// TODO: this can also perhaps have the option between an object with the parameters or
 // the individual parameters
 function buildPostObject(shh, topic, payload, ttl, cb) {
   getSymmetricKey(shh, function(err, symKeyID) {
