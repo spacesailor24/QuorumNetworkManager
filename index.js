@@ -1,6 +1,7 @@
 var prompt = require('prompt')
 
 var util = require('./util.js')
+var newIstanbulNetwork = require('./newIstanbulNetwork.js')
 var newRaftNetwork = require('./newRaftNetwork.js')
 var joinRaftNetwork = require('./joinRaftNetwork.js')
 var joinExistingRaftNetwork = require('./joinExistingRaftNetwork.js')
@@ -10,6 +11,7 @@ var config = require('./config.js')
 prompt.start();
 // TODO: These global vars should be refactored
 var raftNetwork = null
+var istanbulNetwork = null
 var communicationNetwork = null
 var localIpAddress = null
 var remoteIpAddress = null
@@ -18,15 +20,19 @@ var checkForOtherProcesses = false
 var consensus = null //RAFT or IBFT
 
 function handleConsensusChoice(){
-  console.log('Please select an option:\n1) Raft\n2) QuorumChain [Disabled - this does not work on newer versions of Quorum]\n5) Kill all geth and constellation')
+  console.log('Please select an option:\n1) Raft\n2) Istanbul BFT \n5) Kill all geth and constellation')
   prompt.get(['option'], function(err, answer){
     if(answer.option == 1){
       consensus = 'raft'
+      mainLoop()
+    } else if(answer.option == 2){
+      consensus = 'istanbul'
       mainLoop()
     } else if(answer.option == 5){
       util.KillallGethConstellationNode(function(err, result){
         if (err) { return onErr(err); }
         raftNetwork = null
+        istanbulNetwork = null
         communicationNetwork = null;
         mainLoop()
       })      
@@ -36,7 +42,7 @@ function handleConsensusChoice(){
   })
 }
 
-function handleNetworkMembership(cb){
+function getNetworkMembershipPolicy(cb){
   console.log('Please select an option below:');
   console.log('1) Allow anyone to connect');
   console.log('2) [TODO] Allow only people with pre-auth tokens to connect');
@@ -84,7 +90,7 @@ function handleRaftConsensus(){
   console.log('0) Quit');
   prompt.get(['option'], function(err, result){
     if(result.option == 1){
-      handleNetworkMembership(function(res){
+      getNetworkMembershipPolicy(function(res){
         keepExistingFiles(function(setup){
           let options = {
             localIpAddress: localIpAddress,
@@ -142,6 +148,59 @@ function handleRaftConsensus(){
   })
 }
 
+function handleIstanbulConsensus(){
+  console.log('Please select an option below:');
+  console.log('----- Option 1 and 2 are for the initial setup of a istanbul network -----')
+  console.log('1) Start a node as the setup coordinator [Ideally there should only be one coordinator]')
+  console.log('2) Start a node as a non-coordinator')
+  console.log('5) Kill all geth constellation-node');
+  console.log('0) Quit');
+  prompt.get(['option'], function(err, result){
+    if(result.option == 1){
+      getNetworkMembershipPolicy(function(res){
+        keepExistingFiles(function(setup){
+          let options = {
+            localIpAddress: localIpAddress,
+            networkMembership: res.networkMembership,
+            keepExistingFiles: setup.keepExistingFiles
+          };
+          newIstanbulNetwork.handleStartingNewIstanbulNetwork(options, function(err, networks){
+            istanbulNetwork = networks.istanbulNetwork
+            communicationNetwork = networks.communicationNetwork
+            mainLoop()
+          })
+        })
+      })
+    } else if(result.option == 2){
+      /*keepExistingFiles(function(setup){
+        let options = {
+          localIpAddress: localIpAddress,
+          keepExistingFiles: setup.keepExistingFiles
+        };
+        joinRaftNetwork.HandleJoiningRaftNetwork(options, function(err, networks){
+          raftNetwork = networks.raftNetwork
+          communicationNetwork = networks.communicationNetwork
+          mainLoop()
+        })
+      })*/
+      handleIstanbulConsensus()
+    } else if(result.option == 5){
+      util.KillallGethConstellationNode(function(err, result){
+        if (err) { return onErr(err) }
+        raftNetwork = null
+        communicationNetwork = null
+        mainLoop()
+      })
+    } else if(result.option == 0){
+      console.log('Quiting')
+      process.exit(0)
+      return
+    } else {
+      mainLoop()
+    }
+  })
+}
+
 function mainLoop(){
   if(localIpAddress && checkForOtherProcesses == false) {
     util.CheckPreviousCleanExit(function(err, done){
@@ -151,6 +210,8 @@ function mainLoop(){
     })
   } else if(localIpAddress && checkForOtherProcesses && consensus === 'raft'){
     handleRaftConsensus()
+  } else if(localIpAddress && checkForOtherProcesses && consensus === 'istanbul'){
+    handleIstanbulConsensus()
   } else if(localIpAddress && checkForOtherProcesses && consensus == null){
     handleConsensusChoice()
   } else {
