@@ -21,6 +21,11 @@ function startRaftNode(result, cb){
   cmd += ' '+ports.gethNodeRPC
   cmd += ' '+ports.gethNodeWS_RPC
   cmd += ' '+ports.raftHttp
+  if(result.networkMembership === 'permissionedNodes'){
+    cmd += ' permissionedNodes' 
+  } else {
+    cmd += ' allowAll'
+  }
   let child = exec(cmd, options)
   child.stdout.on('data', function(data){
     cb(null, result)
@@ -47,6 +52,22 @@ function createStaticNodeFile(enodeList, cb){
   });
 }
 
+function createPermissionedNodesFile(enodeList, cb){
+  let options = {encoding: 'utf8', timeout: 100*1000};
+  let list = ''
+  for(let enode of enodeList){
+    list += '"'+enode+'",'
+  }
+  list = list.slice(0, -1)
+  let permissionedNodes = '['
+    + list
+    +']'
+  
+  fs.writeFile('Blockchain/permissioned-nodes.json', permissionedNodes, function(err, res){
+    cb(err, res);
+  });
+}
+
 function getConfiguration(result, cb){
   if(setup.automatedSetup){
     if(setup.enodeList){
@@ -54,7 +75,13 @@ function getConfiguration(result, cb){
     } 
     createStaticNodeFile(result.enodeList, function(err, res){
       result.communicationNetwork.staticNodesFileReady = true
-      cb(err, result)
+      if(result.networkMembership === 'permissionedNodes'){
+        createPermissionedNodesFile(result.enodeList, function(err, res){
+          cb(err, result)
+        })
+      } else {
+        cb(err, result)
+      }
     })
   } else {
     console.log('Please wait for others to join. Hit any key + enter once done.')
@@ -64,7 +91,13 @@ function getConfiguration(result, cb){
       }
       createStaticNodeFile(result.enodeList, function(err, res){
         result.communicationNetwork.staticNodesFileReady = true
-        cb(err, result)
+        if(result.networkMembership === 'permissionedNodes'){
+          createPermissionedNodesFile(result.enodeList, function(err, res){
+            cb(err, result)
+          })
+        } else {
+          cb(err, result)
+        }
       })
     })
   }

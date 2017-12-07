@@ -39,11 +39,16 @@ function handleConsensusChoice(){
 function handleNetworkMembership(cb){
   console.log('Please select an option below:');
   console.log('1) Allow anyone to connect');
-  console.log('2) [TODO] Allow only people with pre-auth tokens to connect');
+  console.log('2) Enable using permissioned-nodes');
+  console.log('3) [TODO] Allow only people with pre-auth tokens to connect');
   prompt.get(['option'], function(err, result){
-    if(result.option == 1){
+    if(result.option === 1){
       cb({
         networkMembership: 'allowAll'
+      })
+    } else if(result.option === 2){
+      cb({
+        networkMembership: 'permissionedNodes'
       })
     } else {
       console.log('This option is still TODO, defaulting to option 1');

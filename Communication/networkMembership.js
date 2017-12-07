@@ -151,9 +151,11 @@ function networkMembershipRequestHandler(result, cb){
       message = util.Hex2a(msg.payload);
     } 
     if(message && message.indexOf(request) >= 0){
-      if(result.networkMembership == 'allowAll'){
+      if(result.networkMembership === 'allowAll'){
         allowAllNetworkMembershipRequests(result, msg, message.replace(request, ''))
-      } else if(result.networkMembership == 'allowOnlyPreAuth') {
+      } else if(result.networkMembership === 'permissionedNodes') {
+        
+      } else if(result.networkMembership === 'allowOnlyPreAuth') {
         // TODO
       }
     }

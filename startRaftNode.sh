@@ -16,9 +16,13 @@ WS_RPC_ARGS="--ws --wsaddr 0.0.0.0 --wsport $3 --wsapi $RPC_API --wsorigins=*"
 
 RAFT_ARGS="--raftport $4"
 
-if [ "$#" == 5 ]
+if [ "$5" == "permissionedNodes" ]
   then
-  RAFT_ARGS="$RAFT_ARGS --raftjoinexisting $5"
+  RAFT_ARGS="$RAFT_ARGS --permissioned Blockchain"
+fi
+if [ "$#" == 6 ]
+  then
+  RAFT_ARGS="$RAFT_ARGS --raftjoinexisting $6"
 fi
 
 ALL_ARGS="$FLAGS $HTTP_RPC_ARGS $WS_RPC_ARGS $RAFT_ARGS"
