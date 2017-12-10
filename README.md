@@ -11,7 +11,7 @@
 
 This project's goal is to help getting started with a basic Quorum network. Note that this project is still in its early days and as such, it is not production ready and is very limited in functionality. 
 
-The Quorum Network Manager (QNM) allows users to create and manage Quorum networks easily. It currently supports creating both QuorumChain and RAFT based consensus networks. Based on a user’s consensus choice, the QNM then starts a Quorum network.
+The Quorum Network Manager (QNM) allows users to create and manage Quorum networks easily. It currently supports creating both QuorumChain (for older versions) and RAFT based consensus networks. Based on a user’s consensus choice, the QNM then starts a Quorum network.
 
 For QuorumChain consensus, a coordinator node has the option to specify the number of block makers and voters. The coordinator node then creates a genesis block based on these choices and distributes the genesis block (using Whisper) to the other peers in the network. The QNM also uses Whisper to coordinate adding peers to the network, as well as distribute ether so that peers can submit transactions.
 
@@ -30,7 +30,6 @@ There are two options to getting started, option 1: running a script or option 2
 ```
 workspace
   quorum
-  quorum-genesis
   constellation
   QuorumNetworkManager
   ...
