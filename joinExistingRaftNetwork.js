@@ -105,7 +105,9 @@ function joinRaftNetwork(config, cb){
       privateArchKeyFileName: 'nodeArch.key', 
     },
     "web3IPCHost": './Blockchain/geth.ipc',
-    "web3RPCProvider": 'http://localhost:'+ports.gethNodeRPC
+    "web3RPCProvider": 'http://localhost:'+ports.gethNodeRPC,
+    "web3WSRPCProvider": 'ws://localhost:'+ports.gethNodeWS_RPC,
+    consensus: 'raft'
   }
 
   let seqFunction = async.seq(
