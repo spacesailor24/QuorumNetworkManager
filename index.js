@@ -160,7 +160,7 @@ function handleRaftConsensus(){
 
 function handleIstanbulConsensus(){
   console.log('Please select an option below:');
-  console.log('----- Option 1 and 2 are for the initial setup of a istanbul network -----')
+  console.log('----- Option 1 and 2 are for the initial validator setup of a istanbul network -----')
   console.log('1) Start a node as the setup coordinator [Ideally there should only be one coordinator]')
   console.log('2) Start a node as a non-coordinator')
   console.log('5) Kill all geth constellation-node');
