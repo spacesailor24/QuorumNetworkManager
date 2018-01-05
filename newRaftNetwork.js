@@ -15,6 +15,11 @@ function startRaftNode(result, cb){
   cmd += ' '+ports.gethNodeRPC
   cmd += ' '+ports.gethNodeWS_RPC
   cmd += ' '+ports.raftHttp
+  if(result.networkMembership === 'permissionedNodes'){
+    cmd += ' permissionedNodes' 
+  } else {
+    cmd += ' allowAll'
+  }
   let child = exec(cmd, options)
   child.stdout.on('data', function(data){
     cb(null, result)
