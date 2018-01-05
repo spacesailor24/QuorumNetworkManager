@@ -48,11 +48,11 @@ function getNetworkMembershipPolicy(cb){
   console.log('2) Enable using permissioned-nodes');
   console.log('3) [TODO] Allow only people with pre-auth tokens to connect');
   prompt.get(['option'], function(err, result){
-    if(result.option === 1){
+    if(result.option === '1'){
       cb({
         networkMembership: 'allowAll'
       })
-    } else if(result.option === 2){
+    } else if(result.option === '2'){
       cb({
         networkMembership: 'permissionedNodes'
       })
@@ -70,16 +70,21 @@ function keepExistingFiles(cb){
   console.log('Please select an option below:');
   console.log('1) Clear all files/configuration and start from scratch[WARNING: this clears everything]')
   console.log('2) Keep old files/configuration intact and start the node + whisper services')
+  console.log('3) [TODO] Keep enode and accounts, clear all other files/configuration')
   prompt.get(['option'], function(err, result){
-    let keepFiles = false;
-    if(result.option == 1){
-      keepFiles = false
+    if(result.option === '1'){
+      cb({
+        keepExistingFiles: false
+      })
+    } else if (result.option === '2'){
+      cb({
+        keepExistingFiles: true
+      })
     } else {
-      keepFiles = true
-    } 
-    cb({
-      keepExistingFiles: keepFiles
-    })
+      keepExistingFiles(function(res){
+        cb(res)
+      }) 
+    }
   })
 }
 
