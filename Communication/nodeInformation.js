@@ -12,14 +12,14 @@ var networkNodesInfo = {}
 // TODO: Add to and from fields to validate origins
 function publishNodeInformation(result, cb){
 
-  let web3RPC = result.web3RPC;
+  let web3HttpRPC = result.web3HttpRPC;
   let shh = result.communicationNetwork.web3WSRPC.shh;
 
   var c = result.constellationConfigSetup
   let filePath =  c.folderName+'/'+c.publicKeyFileName
   let constellationPublicKey = fs.readFileSync(filePath, 'utf8')
   let nodeInformationPostIntervalID = null
-  let accountList = web3RPC.eth.accounts
+  let accountList = web3HttpRPC.eth.accounts
 
   whisperUtils.getAsymmetricKey(shh, function(err, id) {
     let nodeInfo = {

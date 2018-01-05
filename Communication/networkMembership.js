@@ -143,7 +143,7 @@ function allowAllNetworkMembershipRequests(result, msg, payload){
 function networkMembershipRequestHandler(result, cb){
   let request = 'request|networkMembership'
 
-  let web3RPC = result.web3WSRPC;
+  let web3WSRPC = result.web3WSRPC;
 
   function onData(msg){
     let message = null;
@@ -161,7 +161,7 @@ function networkMembershipRequestHandler(result, cb){
     }
   }
 
-  whisperUtils.addBootstrapSubscription(["NetworkMembership"], web3RPC.shh, onData)
+  whisperUtils.addBootstrapSubscription(["NetworkMembership"], web3WSRPC.shh, onData)
 
   cb(null, result);
 }
@@ -169,8 +169,7 @@ function networkMembershipRequestHandler(result, cb){
 function existingRaftNetworkMembership(result, cb){
   let request = 'request|existingRaftNetworkMembership'
 
-  let web3RPC = result.web3HttpRPC
-  let commWeb3RPC = result.communicationNetwork.web3WSRPC
+  let commWeb3WSRPC = result.communicationNetwork.web3WSRPC
   let web3HttpRaft = result.web3HttpRaft
 
   function onData(msg){
@@ -188,7 +187,7 @@ function existingRaftNetworkMembership(result, cb){
           if(err){console.log('addPeer ERROR:', err)}
           console.log(peerName + ' has joined the network with raftID: '+raftID)
           let responseString = 'response|existingRaftNetworkMembership|ACCEPTED|'+raftID
-          whisperUtils.post(responseString, commWeb3RPC.shh, 'NetworkMembership')
+          whisperUtils.post(responseString, commWeb3WSRPC.shh, 'NetworkMembership')
         })
       } else if(result.networkMembership == 'allowOnlyPreAuth') {
         // TODO
@@ -196,7 +195,7 @@ function existingRaftNetworkMembership(result, cb){
     }
   }
 
-  whisperUtils.addBootstrapSubscription(["NetworkMembership"], commWeb3RPC.shh, onData)
+  whisperUtils.addBootstrapSubscription(["NetworkMembership"], commWeb3WSRPC.shh, onData)
 
   cb(null, result)
 }

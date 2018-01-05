@@ -40,20 +40,20 @@ describe("RAFT consensus", function() {
         }, 2000)
       })
     })
-    it("should have a web3RPC object", function(){
-      let web3RPC = node1.raftNetwork.web3RPC
-      expect(web3RPC).to.not.be.undefined
+    it("should have a web3HttpRPC object", function(){
+      let web3HttpRPC = node1.raftNetwork.web3HttpRPC
+      expect(web3HttpRPC).to.not.be.undefined
     })
     it("should be able to get accounts", function(done){
-      let web3RPC = node1.raftNetwork.web3RPC
-      web3RPC.eth.getAccounts(function(err, accounts){
+      let web3HttpRPC = node1.raftNetwork.web3HttpRPC
+      web3HttpRPC.eth.getAccounts(function(err, accounts){
         expect(accounts).to.be.an('array')
         done()
       })
     })
     it("should be able to get blockNumber", function(done){
-      let web3RPC = node1.raftNetwork.web3RPC
-      web3RPC.eth.getBlockNumber(function(err, blockNumber){
+      let web3HttpRPC = node1.raftNetwork.web3HttpRPC
+      web3HttpRPC.eth.getBlockNumber(function(err, blockNumber){
         expect(blockNumber).to.equal(0)
         done()
       })
@@ -61,6 +61,10 @@ describe("RAFT consensus", function() {
     it("should have a web3HttpRaft object", function(){
       let web3HttpRaft = node1.raftNetwork.web3HttpRaft
       expect(web3HttpRaft).to.not.be.undefined
+    })
+    it("should have a web3WSRPC object", function(){
+      let web3WSRPC = node1.raftNetwork.web3WSRPC
+      expect(web3WSRPC).to.not.be.undefined
     })
     /*it("should be elected as the minter", function(done){
       let web3HttpRaft = node1.raftNetwork.web3HttpRaft
@@ -85,12 +89,12 @@ describe("RAFT consensus", function() {
       })
     })
     it("should be able to transfer between accounts", function(done){
-      let web3RPC = node1.raftNetwork.web3RPC
-      web3RPC.eth.getAccounts(function(err, accounts){
+      let web3HttpRPC = node1.raftNetwork.web3HttpRPC
+      web3HttpRPC.eth.getAccounts(function(err, accounts){
         if(err){console.log('ERROR:', err)}
         let account0 = accounts[0]
         let account1 = accounts[1]
-        web3RPC.eth.sendTransaction({from:account0, to:account1, value:123}, function(err, txid){
+        web3HttpRPC.eth.sendTransaction({from:account0, to:account1, value:123}, function(err, txid){
           if(err){console.log('ERROR:', err)}
           expect(txid).to.be.a('string')
           setTimeout(function(){
@@ -100,11 +104,11 @@ describe("RAFT consensus", function() {
       })
     })
     it("should be able to get balance of account", function(done){
-      let web3RPC = node1.raftNetwork.web3RPC
-      web3RPC.eth.getAccounts(function(err, accounts){
+      let web3HttpRPC = node1.raftNetwork.web3HttpRPC
+      web3HttpRPC.eth.getAccounts(function(err, accounts){
         if(err){console.log('ERROR:', err)}
         let account1 = accounts[1]
-        web3RPC.eth.getBalance(account1, function(err, balance){
+        web3HttpRPC.eth.getBalance(account1, function(err, balance){
           if(err){console.log('ERROR:', err)}
           let iBalance = Number(balance.toString())
           expect(iBalance).to.be.greaterThan(0)
@@ -113,8 +117,8 @@ describe("RAFT consensus", function() {
       })
     })
     it("blockNumber should now be greater than 0", function(done){
-      let web3RPC = node1.raftNetwork.web3RPC
-      web3RPC.eth.getBlockNumber(function(err, blockNumber){
+      let web3HttpRPC = node1.raftNetwork.web3HttpRPC
+      web3HttpRPC.eth.getBlockNumber(function(err, blockNumber){
         expect(blockNumber).to.be.greaterThan(0)
         done()
       })
@@ -145,24 +149,28 @@ describe("RAFT consensus", function() {
         }, 2000)
       })
     })
-    it("should have a web3RPC object", function(){
-      let web3RPC = node2.raftNetwork.web3RPC
-      expect(web3RPC).to.not.be.undefined
+    it("should have a web3HttpRPC object", function(){
+      let web3HttpRPC = node2.raftNetwork.web3HttpRPC
+      expect(web3HttpRPC).to.not.be.undefined
     })
     it("should be able to get accounts", function(done){
-      let web3RPC = node2.raftNetwork.web3RPC
-      web3RPC.eth.getAccounts(function(err, accounts){
+      let web3HttpRPC = node2.raftNetwork.web3HttpRPC
+      web3HttpRPC.eth.getAccounts(function(err, accounts){
         expect(accounts).to.be.an('array')
         done()
       })
     })
     it("should be able to get blockNumber", function(done){
-      let web3RPC = node2.raftNetwork.web3RPC
-      web3RPC.eth.getBlockNumber(function(err, blockNumber){
+      let web3HttpRPC = node2.raftNetwork.web3HttpRPC
+      web3HttpRPC.eth.getBlockNumber(function(err, blockNumber){
         if(err){console.log('get blocknumber ERROR:', err)}
         expect(blockNumber).to.be.greaterThan(0)
         done()
       })
+    })
+    it("should have a web3WSRPC object", function(){
+      let web3WSRPC = node2.raftNetwork.web3WSRPC
+      expect(web3WSRPC).to.not.be.undefined
     })
     it("should have a web3HttpRaft object", function(){
       let web3HttpRaft = node2.raftNetwork.web3HttpRaft
@@ -194,10 +202,10 @@ describe("RAFT consensus", function() {
       })
     })
     it("should be able to get balance of account", function(done){
-      let web3RPC = node2.raftNetwork.web3RPC
-      web3RPC.eth.getAccounts(function(err, accounts){
+      let web3HttpRPC = node2.raftNetwork.web3HttpRPC
+      web3HttpRPC.eth.getAccounts(function(err, accounts){
         let account1 = accounts[1]
-        web3RPC.eth.getBalance(account1, function(err, balance){
+        web3HttpRPC.eth.getBalance(account1, function(err, balance){
           if(err){console.log('ERROR:', err)}
           let iBalance = Number(balance.toString())
           expect(iBalance).to.be.a('number')
