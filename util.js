@@ -115,15 +115,15 @@ function createWeb3Connection(result, cb){
     }
     // Web3 http RPC
     let httpProvider = result.web3RPCProvider;
-    let Web3RPC = require('web3');
-    let web3RPC = new Web3RPC(httpProvider);
-    result.web3RPC = web3RPC
-    waitForRPCConnection(result.web3RPC, function(){
+    let Web3HttpRPC = require('web3');
+    let web3HttpRPC = new Web3HttpRPC(httpProvider);
+    result.web3HttpRPC = web3HttpRPC
+    waitForRPCConnection(result.web3HttpRPC, function(){
       result.web3IPC = createWeb3IPC(ipcProvider)
       if(result.consensus === 'raft'){
-        let Web3Quorum = require('web3-raft');
-        let web3RPCQuorum = new Web3Quorum(httpProvider);
-        result.web3RPCQuorum = web3RPCQuorum;
+        let Web3Raft = require('web3-raft');
+        let web3HttpRaft = new Web3Raft(httpProvider);
+        result.web3HttpRaft = web3HttpRaft;
       }
       console.log('[*] Node started')
       cb(null, result);
@@ -372,22 +372,6 @@ function displayCommunicationEnode(result, cb){
   })
 }
 
-function unlockAllAccounts(result, cb){
-  console.log('[INFO] Unlocking all accounts ...');
-  async.each(result.web3RPC.eth.accounts, function(account, callback){
-    result.web3IPC.personal.unlockAccount(account, '', 999999, function(err, res){
-      callback(err, res)
-    })
-  }, function(err){
-    if(err){
-      console.log('ERROR:', err)
-    } else {
-      console.log('[INFO] All accounts unlocked')
-    }
-    cb(null, result)
-  })
-}
-
 function handleExistingFiles(result, cb){
   if(result.keepExistingFiles == false){ 
     let seqFunction = async.seq(
@@ -503,6 +487,5 @@ exports.IsWeb3RPCConnectionAlive = isWeb3RPCConnectionAlive
 exports.GenerateEnode = generateEnode
 exports.DisplayEnode = displayEnode
 exports.DisplayCommunicationEnode = displayCommunicationEnode
-exports.UnlockAllAccounts = unlockAllAccounts
 exports.handleExistingFiles = handleExistingFiles
 exports.handleNetworkConfiguration = handleNetworkConfiguration

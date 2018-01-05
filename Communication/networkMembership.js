@@ -169,9 +169,9 @@ function networkMembershipRequestHandler(result, cb){
 function existingRaftNetworkMembership(result, cb){
   let request = 'request|existingRaftNetworkMembership'
 
-  let web3RPC = result.web3RPC
+  let web3RPC = result.web3HttpRPC
   let commWeb3RPC = result.communicationNetwork.web3WSRPC
-  let web3RPCQuorum = result.web3RPCQuorum
+  let web3HttpRaft = result.web3HttpRaft
 
   function onData(msg){
     let message = null
@@ -184,7 +184,7 @@ function existingRaftNetworkMembership(result, cb){
         let peerName = messageTokens[4]
         let from = msg.from // TODO: This needs to be added into a DB.
         let peerEnode = messageTokens[3]
-        web3RPCQuorum.addPeer(peerEnode, function(err, raftID){ 
+        web3HttpRaft.addPeer(peerEnode, function(err, raftID){ 
           if(err){console.log('addPeer ERROR:', err)}
           console.log(peerName + ' has joined the network with raftID: '+raftID)
           let responseString = 'response|existingRaftNetworkMembership|ACCEPTED|'+raftID

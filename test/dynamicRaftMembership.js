@@ -58,14 +58,14 @@ describe("RAFT consensus", function() {
         done()
       })
     })
-    it("should have a web3RPCQuorum object", function(){
-      let web3RPCQuorum = node1.raftNetwork.web3RPCQuorum
-      expect(web3RPCQuorum).to.not.be.undefined
+    it("should have a web3HttpRaft object", function(){
+      let web3HttpRaft = node1.raftNetwork.web3HttpRaft
+      expect(web3HttpRaft).to.not.be.undefined
     })
     /*it("should be elected as the minter", function(done){
-      let web3RPCQuorum = node1.raftNetwork.web3RPCQuorum
-      console.log('web3RPCQuorum.raft:', web3RPCQuorum.raft)
-      web3RPCQuorum.raft.getRole(function(err, role){
+      let web3HttpRaft = node1.raftNetwork.web3HttpRaft
+      console.log('web3HttpRaft.raft:', web3HttpRaft.raft)
+      web3HttpRaft.raft.getRole(function(err, role){
         console.log('getRole ERROR:', err)
         console.log('role:', role)
         expect(role).to.equal('minter')
@@ -164,13 +164,13 @@ describe("RAFT consensus", function() {
         done()
       })
     })
-    it("should have a web3RPCQuorum object", function(){
-      let web3RPCQuorum = node2.raftNetwork.web3RPCQuorum
-      expect(web3RPCQuorum).to.not.be.undefined
+    it("should have a web3HttpRaft object", function(){
+      let web3HttpRaft = node2.raftNetwork.web3HttpRaft
+      expect(web3HttpRaft).to.not.be.undefined
     })
     //it("should be elected as a verifier", function(){
-    //  let web3RPCQuorum = node2.raftNetwork.web3RPCQuorum
-    //  expect(web3RPCQuorum.raft.role).to.equal('verifier')
+    //  let web3HttpRaft = node2.raftNetwork.web3HttpRaft
+    //  expect(web3HttpRaft.raft.role).to.equal('verifier')
     //})
     it("should have a web3IPC object", function(){
       let web3IPC = node2.raftNetwork.web3IPC
