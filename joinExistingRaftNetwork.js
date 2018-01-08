@@ -13,11 +13,6 @@ let setup = require('./config.js').setup
 
 prompt.start()
 
-function displayGethAccount(result, cb){
-  console.log('Account:', result.addressList[0])
-  cb(null, result)
-}
-
 function startRaftNode(result, cb){
   let options = {encoding: 'utf8', timeout: 100*1000}
   let cmd = './startRaftNode.sh'
@@ -64,7 +59,7 @@ function handleExistingFiles(result, cb){
 function handleNetworkConfiguration(result, cb){
   if(result.keepExistingFiles == false){ 
     let seqFunction = async.seq(
-      whisper.RequestExistingNetworkMembership,
+      whisper.RequestExistingRaftNetworkMembership,
       whisper.GetGenesisBlockConfig,
       whisper.GetStaticNodesFile
     )

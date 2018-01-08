@@ -1,5 +1,7 @@
 let async = require('async')
 let exec = require('child_process').exec
+let prompt = require('prompt')
+let fs = require('fs')
 
 let whisper = require('./Communication/whisperNetwork.js')
 let util = require('./util.js')
@@ -8,6 +10,8 @@ let peerHandler = require('./peerHandler.js')
 let fundingHandler = require('./fundingHandler.js')
 let ports = require('./config.js').ports
 let setup = require('./config.js').setup
+
+prompt.start()
 
 function startIstanbulNode(result, cb){
   console.log('[*] Starting istanbul node...')
@@ -26,12 +30,48 @@ function startIstanbulNode(result, cb){
   })
 }
 
-function startNewIstanbulNetwork(config, cb){
-  console.log('[*] Starting new node...')
+function handleExistingFiles(result, cb){
+  if(result.keepExistingFiles === false){ 
+    let seqFunction = async.seq(
+      util.ClearDirectories,
+      util.CreateDirectories,
+      util.GetNewGethAccount,
+      util.GenerateEnode,
+      util.DisplayEnode,
+      constellation.CreateNewKeys,
+      constellation.CreateConfig
+    )
+    seqFunction(result, function(err, res){
+      if (err) { return console.log('ERROR', err) }
+      cb(null, res)
+    })
+  } else {
+    cb(null, result)
+  }
+}
+
+function handleNetworkConfiguration(result, cb){
+  if(result.keepExistingFiles === false){ 
+    let seqFunction = async.seq(
+      whisper.requestExistingIstanbulNetworkMembership,
+      whisper.GetGenesisBlockConfig,
+      whisper.GetStaticNodesFile
+    )
+    seqFunction(result, function(err, res){
+      if (err) { return console.log('ERROR', err) }
+      cb(null, res)
+    })
+  } else {
+    cb(null, result)
+  }
+}
+
+function joinIstanbulNetwork(config, cb){
+  console.log('[*] Joining network...')
 
   let nodeConfig = {
     localIpAddress: config.localIpAddress,
-    networkMembership: config.networkMembership,
+    remoteIpAddress : config.remoteIpAddress, 
     keepExistingFiles: config.keepExistingFiles,
     folders: ['Blockchain', 'Blockchain/geth', 'Constellation'], 
     constellationKeySetup: [
@@ -43,7 +83,7 @@ function startNewIstanbulNetwork(config, cb){
       folderName: 'Constellation', 
       localIpAddress : config.localIpAddress, 
       localPort : ports.constellation,
-      remoteIpAddress : null, 
+      remoteIpAddress : config.remoteIpAddress, 
       remotePort : ports.constellation,
       publicKeyFileName: 'node.pub', 
       privateKeyFileName: 'node.key', 
@@ -57,39 +97,51 @@ function startNewIstanbulNetwork(config, cb){
   }
 
   let seqFunction = async.seq(
-    util.handleExistingFiles,
-    whisper.StartCommunicationNetwork,
-    util.handleNetworkConfiguration,
+    handleExistingFiles,
+    whisper.JoinCommunicationNetwork,
+    handleNetworkConfiguration,
     startIstanbulNode,
     util.CreateWeb3Connection,
     whisper.AddEnodeResponseHandler,
     peerHandler.ListenForNewEnodes,
-    whisper.AddEtherResponseHandler,
     fundingHandler.MonitorAccountBalances,
-    whisper.ExistingIstanbulNetworkMembership,
+    whisper.existingIstanbulNetworkMembership,
     whisper.PublishNodeInformation
   )
 
   seqFunction(nodeConfig, function(err, res){
     if (err) { return console.log('ERROR', err) }
-    console.log('[*] Done')
+    console.log('[*] New network started')
     cb(err, res)
   })
 }
-function handleStartingNewIstanbulNetwork(options, cb){
+
+function getRemoteIpAddress(cb){
+  if(setup.automatedSetup === true){
+    cb(setup.remoteIpAddress)
+  } else {
+    console.log('In order to join the network, please enter the ip address of the coordinating node')
+    prompt.get(['ipAddress'], function (err, network) {
+      cb(network.ipAddress)
+    })
+  } 
+}
+
+function handleJoiningExistingIstanbulNetwork(options, cb){
   config = {}
   config.localIpAddress = options.localIpAddress
-  config.networkMembership = options.networkMembership
   config.keepExistingFiles = options.keepExistingFiles
-  startNewIstanbulNetwork(config, function(err, result){
-    if (err) { return console.log('ERROR', err) }
-    config.istanbulNetwork = Object.assign({}, result)
-    let networks = {
-      istanbulNetwork: config.istanbulNetwork,
-      communicationNetwork: config.communicationNetwork
-    }
-    cb(err, networks)
+  getRemoteIpAddress(function(remoteIpAddress){
+    config.remoteIpAddress = remoteIpAddress
+    joinIstanbulNetwork(config, function(err, result){
+      if (err) { return console.log('ERROR', err) }
+      let networks = {
+        raftNetwork: Object.assign({}, result),
+        communicationNetwork: config.communicationNetwork
+      }
+      cb(err, networks)
+    })
   })
 }
 
-exports.handleStartingNewIstanbulNetwork = handleStartingNewIstanbulNetwork
+exports.handleJoiningExistingIstanbulNetwork = handleJoiningExistingIstanbulNetwork

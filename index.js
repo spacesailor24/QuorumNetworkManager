@@ -2,6 +2,7 @@ var prompt = require('prompt')
 
 var util = require('./util.js')
 var newIstanbulNetwork = require('./newIstanbulNetwork.js')
+var joinIstanbulNetwork = require('./joinExistingIstanbulNetwork.js')
 var newRaftNetwork = require('./newRaftNetwork.js')
 var joinRaftNetwork = require('./joinRaftNetwork.js')
 var joinExistingRaftNetwork = require('./joinExistingRaftNetwork.js')
@@ -182,18 +183,17 @@ function handleIstanbulConsensus(){
         })
       })
     } else if(result.option == 2){
-      /*keepExistingFiles(function(setup){
+      keepExistingFiles(function(setup){
         let options = {
           localIpAddress: localIpAddress,
           keepExistingFiles: setup.keepExistingFiles
         };
-        joinRaftNetwork.HandleJoiningRaftNetwork(options, function(err, networks){
-          raftNetwork = networks.raftNetwork
+        joinIstanbulNetwork.handleJoiningExistingIstanbulNetwork(options, function(err, networks){
+          istanbulNetwork = networks.istanbulNetwork
           communicationNetwork = networks.communicationNetwork
           mainLoop()
         })
-      })*/
-      handleIstanbulConsensus()
+      })
     } else if(result.option == 5){
       util.KillallGethConstellationNode(function(err, result){
         if (err) { return onErr(err) }

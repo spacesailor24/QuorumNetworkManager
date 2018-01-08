@@ -7,7 +7,7 @@ var messageString = require('./messageStrings.js');
 var whisperUtils = require('./whisperUtils.js')
 
 // TODO: Add to and from fields to validate origins
-function requestExistingNetworkMembership(result, cb){
+function requestExistingRaftNetworkMembership(result, cb){
 
   console.log('[*] Requesting existing network membership. This will block until the other node responds')
   
@@ -25,7 +25,7 @@ function requestExistingNetworkMembership(result, cb){
       receivedNetworkMembership = true
       if(subscription){
         subscription.unsubscribe(function(err, res){
-          if(err) { console.log('requestExistingNetworkMembership unsubscribe ERROR:', err) }
+          if(err) { console.log('requestExistingRaftNetworkMembership unsubscribe ERROR:', err) }
           subscription = null
         })
       }
@@ -154,7 +154,7 @@ function networkMembershipRequestHandler(result, cb){
       if(result.networkMembership === 'allowAll'){
         allowAllNetworkMembershipRequests(result, msg, message.replace(request, ''))
       } else if(result.networkMembership === 'permissionedNodes') {
-        
+        // TODO
       } else if(result.networkMembership === 'allowOnlyPreAuth') {
         // TODO
       }
@@ -201,6 +201,6 @@ function existingRaftNetworkMembership(result, cb){
 }
 
 exports.RequestNetworkMembership = requestNetworkMembership
-exports.RequestExistingNetworkMembership = requestExistingNetworkMembership
+exports.RequestExistingRaftNetworkMembership = requestExistingRaftNetworkMembership
 exports.ExistingRaftNetworkMembership = existingRaftNetworkMembership
 exports.NetworkMembershipRequestHandler = networkMembershipRequestHandler
