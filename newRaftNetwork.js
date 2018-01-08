@@ -62,6 +62,8 @@ function startNewRaftNetwork(config, cb){
 
   let seqFunction = async.seq(
     util.handleExistingFiles,
+    util.generateEnode,
+    util.displayEnode,
     whisper.StartCommunicationNetwork,
     util.handleNetworkConfiguration,
     startRaftNode,
