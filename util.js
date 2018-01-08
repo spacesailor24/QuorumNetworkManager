@@ -204,7 +204,7 @@ function checkPreviousCleanExit(cb){
 function createRaftGenesisBlockConfig(result, cb){
   let genesisTemplate = {
     "alloc": {},
-    "coinbase": result.blockMakers[0],
+    "coinbase": result.addressList[0],
     "config": {
       "homesteadBlock": 0,
       "chainId": 1,
@@ -221,8 +221,8 @@ function createRaftGenesisBlockConfig(result, cb){
     "timestamp": "0x00"
   }
 
-  for(let key in result.blockMakers){
-    genesisTemplate.alloc[result.blockMakers[key]] = {
+  for(let key in result.addressList){
+    genesisTemplate.alloc[result.addressList[key]] = {
       "balance": "1000000000000000000000000000"
     }
   }
@@ -395,17 +395,12 @@ function getIstanbulConfiguration(result, cb){
 }
 
 function addAddresslistToQuorumConfig(result, cb){
-  result.blockMakers = result.addressList
-  result.blockVoters = result.addressList
   if(setup.addressList && setup.addressList.length > 0){
-    result.blockMakers = result.blockMakers.concat(setup.addressList) 
-    result.blockVoters = result.blockVoters.concat(setup.addressList) 
+    result.addressList = result.addressList.concat(setup.addressList) 
   } 
   if(result.communicationNetwork && result.communicationNetwork.addressList){
-    result.blockMakers = result.blockMakers.concat(result.communicationNetwork.addressList) 
-    result.blockVoters = result.blockVoters.concat(result.communicationNetwork.addressList) 
+    result.addressList = result.addressList.concat(result.communicationNetwork.addressList) 
   }
-  result.threshold = 1 
   cb(null, result)
 }
 
