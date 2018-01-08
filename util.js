@@ -284,8 +284,6 @@ function displayEnode(result, cb){
     data = data.slice(0, -1)
     let enode = 'enode://'+data+'@'+result.localIpAddress+':'+ports.gethNode+'?raftport='+ports.raftHttp
     console.log('\nenode:', enode+'\n')
-    //result.nodePubKey = data
-    //result.enodeList = [enode] // TODO: investigate why this is a list
     cb(null, result)
   })
   child.stderr.on('data', function(error){
@@ -319,9 +317,7 @@ function handleExistingFiles(result, cb){
   if(result.keepExistingFiles == false){ 
     let seqFunction = async.seq(
       clearDirectories,
-      createDirectories,
-      generateEnode,    
-      displayEnode
+      createDirectories
     )
     seqFunction(result, function(err, res){
       if (err) { return console.log('ERROR', err) }
@@ -371,6 +367,53 @@ function getRaftConfiguration(result, cb){
   }
 }
 
+function runIstanbulTools(cb){
+  let cmd = 'istanbul setup --nodes --verbose --num 1 --quorum';
+  let child = exec(cmd, function(){ })
+
+  let dataString = ''
+  child.stdout.on('data', function(chunk){
+    dataString += chunk
+  })
+
+  child.stdout.on('end', function(){
+    cb(null, dataString)
+  })
+
+  child.stderr.on('data', function(error){
+    console.log('ERROR:', error)
+    cb(error, null)
+  })
+}
+
+function createIstanbulFiles(dataString, addressList, cb){
+  let validatorsName = 'validators'
+  let staticNodesFileName = 'static-nodes.json'
+  let genesisFileName = 'genesis.json'
+  let validatorsIndex = dataString.indexOf('validators')
+  let staticNodesIndex = dataString.indexOf('static-nodes.json')
+  let genesisFileIndex = dataString.indexOf('genesis.json')
+
+  let validatorsFile = dataString.substring(validatorsName.length, staticNodesIndex)
+  let validatorsJSON = JSON.parse(validatorsFile)
+  let nodekeyFile = validatorsJSON['Nodekey']
+  fs.writeFileSync('Blockchain/geth/nodekey', nodekeyFile, 'utf8') 
+  
+  let staticNodesFile = dataString.substring(staticNodesIndex+staticNodesFileName.length, genesisFileIndex)
+  fs.writeFileSync('Blockchain/static-nodes.json', JSON.stringify(staticNodesFile), 'utf8') 
+
+  let genesisJSON = JSON.parse(dataString.substring(genesisFileIndex+genesisFileName.length))
+  genesisJSON.alloc = {}
+  for(let key in addressList){
+    genesisJSON.alloc[addressList[key]] = {
+      "balance": "0x446c3b15f9926687d2c40534fdb564000000000000"
+    }
+  }
+  fs.writeFileSync('quorum-genesis.json', JSON.stringify(genesisJSON), 'utf8') 
+
+  cb()
+}
+
 function getIstanbulConfiguration(result, cb){
   if(setup.automatedSetup){
     /*if(setup.enodeList){
@@ -381,12 +424,8 @@ function getIstanbulConfiguration(result, cb){
       cb(err, result)
     })*/
   } else {
-    console.log('Please wait for others to join. Hit any key + enter once done.')
-    prompt.get(['done'] , function (err, answer) {
-      if(result.communicationNetwork && result.communicationNetwork.enodeList){
-        result.enodeList = result.enodeList.concat(result.communicationNetwork.enodeList) 
-      }
-      createStaticNodeFile(result.enodeList, function(err, res){
+    runIstanbulTools(function(err, dataString){
+      createIstanbulFiles(dataString, result.addressList, function(){
         result.communicationNetwork.staticNodesFileReady = true
         cb(err, result)
       })
@@ -422,6 +461,8 @@ function handleNetworkConfiguration(result, cb){
       })
     } else if(result.consensus === 'istanbul') {
       let seqFunction = async.seq(
+        getNewGethAccount,
+        addAddresslistToQuorumConfig,
         getIstanbulConfiguration,
         constellation.CreateNewKeys, 
         constellation.CreateConfig
@@ -456,4 +497,6 @@ exports.GenerateEnode = generateEnode
 exports.DisplayEnode = displayEnode
 exports.DisplayCommunicationEnode = displayCommunicationEnode
 exports.handleExistingFiles = handleExistingFiles
+exports.generateEnode = generateEnode
+exports.displayEnode = displayEnode
 exports.handleNetworkConfiguration = handleNetworkConfiguration
