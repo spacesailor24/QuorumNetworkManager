@@ -61,13 +61,13 @@ function startNewIstanbulNetwork(config, cb){
     whisper.StartCommunicationNetwork,
     util.handleNetworkConfiguration,
     startIstanbulNode,
-    /*util.CreateWeb3Connection,
+    util.CreateWeb3Connection,
     whisper.AddEnodeResponseHandler,
     peerHandler.ListenForNewEnodes,
     whisper.AddEtherResponseHandler,
     fundingHandler.MonitorAccountBalances,
-    whisper.ExistingIstanbulNetworkMembership,
-    whisper.PublishNodeInformation*/
+    //whisper.ExistingIstanbulNetworkMembership,
+    whisper.PublishNodeInformation
   )
 
   seqFunction(nodeConfig, function(err, res){

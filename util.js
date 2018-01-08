@@ -386,7 +386,7 @@ function runIstanbulTools(cb){
   })
 }
 
-function createIstanbulFiles(dataString, addressList, cb){
+function createIstanbulFiles(dataString, result, cb){
   let validatorsName = 'validators'
   let staticNodesFileName = 'static-nodes.json'
   let genesisFileName = 'genesis.json'
@@ -399,13 +399,14 @@ function createIstanbulFiles(dataString, addressList, cb){
   let nodekeyFile = validatorsJSON['Nodekey']
   fs.writeFileSync('Blockchain/geth/nodekey', nodekeyFile, 'utf8') 
   
-  let staticNodesFile = dataString.substring(staticNodesIndex+staticNodesFileName.length, genesisFileIndex)
-  fs.writeFileSync('Blockchain/static-nodes.json', JSON.stringify(staticNodesFile), 'utf8') 
+  let staticNodesJSON = JSON.parse(dataString.substring(staticNodesIndex+staticNodesFileName.length, genesisFileIndex))
+  staticNodesJSON[0] = staticNodesJSON[0].replace('0.0.0.0:30303?discport=0', result.localIpAddress+':'+ports.gethNode)
+  fs.writeFileSync('Blockchain/static-nodes.json', JSON.stringify(staticNodesJSON), 'utf8') 
 
   let genesisJSON = JSON.parse(dataString.substring(genesisFileIndex+genesisFileName.length))
   genesisJSON.alloc = {}
-  for(let key in addressList){
-    genesisJSON.alloc[addressList[key]] = {
+  for(let key in result.addressList){
+    genesisJSON.alloc[result.addressList[key]] = {
       "balance": "0x446c3b15f9926687d2c40534fdb564000000000000"
     }
   }
@@ -416,16 +417,10 @@ function createIstanbulFiles(dataString, addressList, cb){
 
 function getIstanbulConfiguration(result, cb){
   if(setup.automatedSetup){
-    /*if(setup.enodeList){
-      result.enodeList = result.enodeList.concat(setup.enodeList) 
-    } 
-    createStaticNodeFile(result.enodeList, function(err, res){
-      result.communicationNetwork.staticNodesFileReady = true
-      cb(err, result)
-    })*/
+    // TODO
   } else {
     runIstanbulTools(function(err, dataString){
-      createIstanbulFiles(dataString, result.addressList, function(){
+      createIstanbulFiles(dataString, result, function(){
         result.communicationNetwork.staticNodesFileReady = true
         cb(err, result)
       })
