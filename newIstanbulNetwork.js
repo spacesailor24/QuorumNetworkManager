@@ -66,7 +66,7 @@ function startNewIstanbulNetwork(config, cb){
     peerHandler.ListenForNewEnodes,
     whisper.AddEtherResponseHandler,
     fundingHandler.MonitorAccountBalances,
-    whisper.ExistingIstanbulNetworkMembership,
+    whisper.existingIstanbulNetworkMembership,
     whisper.PublishNodeInformation
   )
 
