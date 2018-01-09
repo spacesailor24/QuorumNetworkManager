@@ -404,7 +404,6 @@ function createIstanbulFiles(dataString, result, cb){
   fs.writeFileSync('Blockchain/static-nodes.json', JSON.stringify(staticNodesJSON), 'utf8') 
 
   let genesisJSON = JSON.parse(dataString.substring(genesisFileIndex+genesisFileName.length))
-  genesisJSON.alloc = {}
   for(let key in result.addressList){
     genesisJSON.alloc[result.addressList[key]] = {
       "balance": "0x446c3b15f9926687d2c40534fdb564000000000000"
@@ -421,6 +420,7 @@ function getIstanbulConfiguration(result, cb){
   } else {
     runIstanbulTools(function(err, dataString){
       createIstanbulFiles(dataString, result, function(){
+        result.communicationNetwork.genesisBlockConfigReady = true
         result.communicationNetwork.staticNodesFileReady = true
         cb(err, result)
       })
