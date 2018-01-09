@@ -260,21 +260,41 @@ function getEnodePubKey(cb){
 }
 
 function generateEnode(result, cb){
-  var options = {encoding: 'utf8', timeout: 10*1000};
   console.log('Generating node key')
-  var child = exec('bootnode -genkey Blockchain/geth/nodekey', options)
-  child.stderr.on('data', function(error){
-    console.log('ERROR:', error)
-  })
-  child.stdout.on('close', function(error){
-    getEnodePubKey(function(err, pubKey){
-      let enode = 'enode://'+pubKey+'@'+result.localIpAddress+':'+ports.gethNode+
-        '?raftport='+ports.raftHttp
-      result.nodePubKey = pubKey
-      result.enodeList = [enode]
-      cb(null, result)
+  if(result.consensus === 'raft'){
+    let options = {encoding: 'utf8', timeout: 10*1000};
+    let child = exec('bootnode -genkey Blockchain/geth/nodekey', options)
+    child.stderr.on('data', function(error){
+      console.log('ERROR:', error)
     })
-  })
+    child.stdout.on('close', function(error){
+      getEnodePubKey(function(err, pubKey){
+        let enode = 'enode://'+pubKey+'@'+result.localIpAddress+':'+ports.gethNode+
+          '?raftport='+ports.raftHttp
+        result.nodePubKey = pubKey
+        result.enodeList = [enode]
+        cb(null, result)
+      })
+    })
+  } else if(result.consensus === 'istanbul'){
+    runIstanbulTools(function(err, dataString){
+      getIstanbulSetupFromIstanbulTools(dataString, function(err, validatorsJSON, staticNodesJSON, genesisJSON){
+        let validatorAddress = validatorsJSON['Address']
+        let enode = validatorsJSON['NodeInfo'].replace('0.0.0.0:30303?discport=0', result.localIpAddress+':'+ports.gethNode)
+        let nodePubKey =  enode.substring('enode://'.length, enode.indexOf('@'))
+        let nodekey = validatorsJSON['Nodekey']
+        console.log('To become a validator, please use the following address:', validatorAddress)
+        result.validatorAddress = validatorAddress
+        result.nodePubKey = nodePubKey
+        result.enodeList = [enode]
+        fs.writeFileSync('Blockchain/geth/nodekey', nodekey, 'utf8') 
+        cb(null, result)
+      })
+    })
+  } else {
+    console.log('ERROR: Invalid consensus choice')
+    cb(null, null)
+  }
 }
 
 function displayEnode(result, cb){
@@ -386,7 +406,8 @@ function runIstanbulTools(cb){
   })
 }
 
-function createIstanbulFiles(dataString, result, cb){
+function getIstanbulSetupFromIstanbulTools(dataString, cb){
+
   let validatorsName = 'validators'
   let staticNodesFileName = 'static-nodes.json'
   let genesisFileName = 'genesis.json'
@@ -396,22 +417,12 @@ function createIstanbulFiles(dataString, result, cb){
 
   let validatorsFile = dataString.substring(validatorsName.length, staticNodesIndex)
   let validatorsJSON = JSON.parse(validatorsFile)
-  let nodekeyFile = validatorsJSON['Nodekey']
-  fs.writeFileSync('Blockchain/geth/nodekey', nodekeyFile, 'utf8') 
-  
+
   let staticNodesJSON = JSON.parse(dataString.substring(staticNodesIndex+staticNodesFileName.length, genesisFileIndex))
-  staticNodesJSON[0] = staticNodesJSON[0].replace('0.0.0.0:30303?discport=0', result.localIpAddress+':'+ports.gethNode)
-  fs.writeFileSync('Blockchain/static-nodes.json', JSON.stringify(staticNodesJSON), 'utf8') 
 
   let genesisJSON = JSON.parse(dataString.substring(genesisFileIndex+genesisFileName.length))
-  for(let key in result.addressList){
-    genesisJSON.alloc[result.addressList[key]] = {
-      "balance": "0x446c3b15f9926687d2c40534fdb564000000000000"
-    }
-  }
-  fs.writeFileSync('quorum-genesis.json', JSON.stringify(genesisJSON), 'utf8') 
 
-  cb()
+  cb(null, validatorsJSON, staticNodesJSON, genesisJSON)
 }
 
 function getIstanbulConfiguration(result, cb){
@@ -419,7 +430,20 @@ function getIstanbulConfiguration(result, cb){
     // TODO
   } else {
     runIstanbulTools(function(err, dataString){
-      createIstanbulFiles(dataString, result, function(){
+      getIstanbulSetupFromIstanbulTools(dataString, function(err, validatorsJSON, staticNodesJSON, genesisJSON){
+        let nodekeyFile = validatorsJSON['Nodekey']
+        fs.writeFileSync('Blockchain/geth/nodekey', nodekeyFile, 'utf8') 
+        
+        staticNodesJSON[0] = staticNodesJSON[0].replace('0.0.0.0:30303?discport=0', result.localIpAddress+':'+ports.gethNode)
+        fs.writeFileSync('Blockchain/static-nodes.json', JSON.stringify(staticNodesJSON), 'utf8') 
+
+        for(let key in result.addressList){
+          genesisJSON.alloc[result.addressList[key]] = {
+            "balance": "0x446c3b15f9926687d2c40534fdb564000000000000"
+          }
+        }
+        fs.writeFileSync('quorum-genesis.json', JSON.stringify(genesisJSON), 'utf8') 
+
         result.communicationNetwork.genesisBlockConfigReady = true
         result.communicationNetwork.staticNodesFileReady = true
         cb(err, result)
