@@ -7,6 +7,7 @@ var util = require('../util.js');
 var config = require('../config.js')
 var ports = require('../config.js').ports
 var networkMembership = require('./networkMembership.js');
+var istanbulNetworkMembership = require('./istanbulNetworkMembership.js');
 var nodeInformation = require('./nodeInformation.js');
 var messageString = require('./messageStrings.js');
 var request = messageString.Request;
@@ -17,8 +18,8 @@ let whisperLog = 'whisperCommunications.log'
 
 // TODO: Maybe check that address is indeed in need of some ether before sending it some
 // TODO: Check from which address to send the ether, for now this defaults to eth.accounts[0]
-function requestSomeEther(commWeb3RPC, address, cb){
-  let shh = commWeb3RPC.shh
+function requestSomeEther(commWeb3WSRPC, address, cb){
+  let shh = commWeb3WSRPC.shh
   let message = messageString.BuildDelimitedString(request.ether, address)
 
   whisperUtils.post(message, shh, 'Ether', function(err, res){
@@ -30,8 +31,8 @@ function requestSomeEther(commWeb3RPC, address, cb){
 // TODO: Maybe check that address is indeed in need of some ether before sending it some
 // TODO: Check from which address to send the ether, for now this defaults to eth.accounts[0]
 function addEtherResponseHandler(result, cb){
-  var web3RPC = result.web3RPC
-  var commWeb3RPC = result.communicationNetwork.web3WSRPC
+  var web3HttpRPC = result.web3HttpRPC
+  var shh = result.communicationNetwork.web3WSRPC.shh
 
   function onData(msg){
     var message = null
@@ -41,9 +42,9 @@ function addEtherResponseHandler(result, cb){
     if(message && message.indexOf(request.ether) >= 0){
       var address = message.substring(request.ether.length+2)
 
-      web3RPC.eth.getAccounts(function(err, accounts){
+      web3HttpRPC.eth.getAccounts(function(err, accounts){
         if(accounts && accounts.length > 0){
-          web3RPC.eth.getBalance(accounts[0], function(err, balance){
+          web3HttpRPC.eth.getBalance(accounts[0], function(err, balance){
             if(err){console.log('addEtherResponseHandler getBalance ERROR:', err)}
             let stringBalance = balance.toString()
             let intBalance = parseInt(stringBalance)
@@ -51,9 +52,9 @@ function addEtherResponseHandler(result, cb){
               var transaction = {
                 from: accounts[0],
                 to: address,
-                value: (web3RPC.utils.toWei('1', 'ether')).toString()
+                value: (web3HttpRPC.utils.toWei('1', 'ether')).toString()
               }
-              web3RPC.eth.sendTransaction(transaction, function(err, res){
+              web3HttpRPC.eth.sendTransaction(transaction, function(err, res){
                 if(err){console.log('addEtherResponseHandler ERROR:', err)}
               })
             }
@@ -63,7 +64,7 @@ function addEtherResponseHandler(result, cb){
     }
   }
 
-  whisperUtils.addBootstrapSubscription(["Ether"], commWeb3RPC.shh, onData)
+  whisperUtils.addBootstrapSubscription(["Ether"], shh, onData)
 
   cb(null, result)
 }
@@ -73,7 +74,7 @@ function addEtherResponseHandler(result, cb){
 // This will broadcast this node's enode to any 'request|enode' message
 function addEnodeResponseHandler(result, cb){
   let web3IPC = result.web3IPC
-  let commWeb3RPC = result.communicationNetwork.web3WSRPC
+  let shh = result.communicationNetwork.web3WSRPC.shh
   
   function onData(msg){
     var message = null
@@ -87,14 +88,14 @@ function addEnodeResponseHandler(result, cb){
         enodeResponse = enodeResponse.replace('\[\:\:\]', result.localIpAddress)
         var hexString = new Buffer(enodeResponse).toString('hex')
         var postObj = messageString.BuildPostObject(['Enode'], hexString, 10, 1);
-        commWeb3RPC.shh.post(postObj.JSON, function(err, res){
+        shh.post(postObj.JSON, function(err, res){
           if(err){console.log('addEnodeResponseHandler post ERROR:', err);}
         })
       })
     }
   }
 
-  whisperUtils.addBootstrapSubscription(["Enode"], commWeb3RPC.shh, onData)
+  whisperUtils.addBootstrapSubscription(["Enode"], shh, onData)
 
   cb(null, result)
 }
@@ -142,7 +143,7 @@ function copyCommunicationNodeKey(result, cb){
 // TODO: Add check whether requester has correct permissions
 function genesisConfigHandler(result, cb){
   let genesisPath = process.cwd() + '/quorum-genesis.json'
-  let web3RPC = result.web3WSRPC;
+  let web3WSRPC = result.web3WSRPC;
 
   function onData(msg){
     if(result.genesisBlockConfigReady != true){
@@ -156,21 +157,21 @@ function genesisConfigHandler(result, cb){
       fs.readFile(genesisPath, 'utf8', function(err, data){
         if(err){console.log('genesisConfigHandler readFile ERROR:', err);}   
         let genesisConfig = messageString.AppendData(response.genesisConfig, data);
-        whisperUtils.post(genesisConfig, web3RPC.shh, 'GenesisConfig', function(err, res){
+        whisperUtils.post(genesisConfig, web3WSRPC.shh, 'GenesisConfig', function(err, res){
           if(err){console.log('genesisConfigHandler post ERROR:', err);}
         })
       })
     }
   }  
   
-  whisperUtils.addBootstrapSubscription(["GenesisConfig"], web3RPC.shh, onData)
+  whisperUtils.addBootstrapSubscription(["GenesisConfig"], web3WSRPC.shh, onData)
 
   cb(null, result)
 }
 
 function staticNodesFileHandler(result, cb){
   let staticNodesPath = process.cwd() + '/Blockchain/static-nodes.json'
-  let web3RPC = result.web3WSRPC;
+  let web3WSRPC = result.web3WSRPC;
 
   function onData(msg){
     if(result.staticNodesFileReady != true){
@@ -184,14 +185,14 @@ function staticNodesFileHandler(result, cb){
       fs.readFile(staticNodesPath, 'utf8', function(err, data){
         if(err){console.log('staticNodesFileHandler readFile ERROR:', err)}
         var staticNodes = messageString.AppendData(response.staticNodes, data)
-        whisperUtils.post(staticNodes, web3RPC.shh, 'StaticNodes', function(err, res){
+        whisperUtils.post(staticNodes, web3WSRPC.shh, 'StaticNodes', function(err, res){
           if(err){console.log('staticNodesFileHandler post ERROR:', err)}
         })
       })
     }
   }
 
-  whisperUtils.addBootstrapSubscription(["StaticNodes"], web3RPC.shh, onData)
+  whisperUtils.addBootstrapSubscription(["StaticNodes"], web3WSRPC.shh, onData)
 
   cb(null, result)
 }
@@ -381,10 +382,13 @@ exports.AddEtherResponseHandler = addEtherResponseHandler
 exports.AddEnodeResponseHandler = addEnodeResponseHandler
 exports.AddEnodeRequestHandler = addEnodeRequestHandler
 exports.GetGenesisBlockConfig = getGenesisBlockConfig
-exports.RequestNetworkMembership = networkMembership.RequestNetworkMembership
-exports.RequestExistingNetworkMembership = networkMembership.RequestExistingNetworkMembership
-exports.ExistingRaftNetworkMembership = networkMembership.ExistingRaftNetworkMembership
 exports.GetStaticNodesFile = getStaticNodesFile
 exports.StaticNodesFileHandler = staticNodesFileHandler
 exports.RequestSomeEther = requestSomeEther
+
 exports.PublishNodeInformation = nodeInformation.PublishNodeInformation
+exports.RequestNetworkMembership = networkMembership.RequestNetworkMembership
+exports.RequestExistingRaftNetworkMembership = networkMembership.RequestExistingRaftNetworkMembership
+exports.ExistingRaftNetworkMembership = networkMembership.ExistingRaftNetworkMembership
+exports.existingIstanbulNetworkMembership = istanbulNetworkMembership.existingIstanbulNetworkMembership
+exports.requestExistingIstanbulNetworkMembership = istanbulNetworkMembership.requestExistingIstanbulNetworkMembership

@@ -2,8 +2,13 @@ var exec = require('child_process').exec;
 var ps = require('ps-node')
 var fs = require('fs');
 var async = require('async')
+var prompt = require('prompt')
+prompt.start();
 
 var ports = require('./config.js').ports
+let setup = require('./config.js').setup
+
+let constellation = require('./constellation.js')
 
 function killallGethConstellationNode(cb){
   var cmd = 'killall -9';
@@ -110,15 +115,16 @@ function createWeb3Connection(result, cb){
     }
     // Web3 http RPC
     let httpProvider = result.web3RPCProvider;
-    let Web3RPC = require('web3');
-    let web3RPC = new Web3RPC(httpProvider);
-    result.web3RPC = web3RPC
-    waitForRPCConnection(result.web3RPC, function(){
+    let Web3HttpRPC = require('web3');
+    let web3HttpRPC = new Web3HttpRPC(httpProvider);
+    result.web3HttpRPC = web3HttpRPC
+    waitForRPCConnection(result.web3HttpRPC, function(){
       result.web3IPC = createWeb3IPC(ipcProvider)
-      // Web3 RPC Quorum
-      let Web3Quorum = require('web3-raft');
-      let web3RPCQuorum = new Web3Quorum(httpProvider);
-      result.web3RPCQuorum = web3RPCQuorum;
+      if(result.consensus === 'raft'){
+        let Web3Raft = require('web3-raft');
+        let web3HttpRaft = new Web3Raft(httpProvider);
+        result.web3HttpRaft = web3HttpRaft;
+      }
       console.log('[*] Node started')
       cb(null, result);
     })
@@ -198,7 +204,7 @@ function checkPreviousCleanExit(cb){
 function createRaftGenesisBlockConfig(result, cb){
   let genesisTemplate = {
     "alloc": {},
-    "coinbase": result.blockMakers[0],
+    "coinbase": result.addressList[0],
     "config": {
       "homesteadBlock": 0,
       "chainId": 1,
@@ -215,8 +221,8 @@ function createRaftGenesisBlockConfig(result, cb){
     "timestamp": "0x00"
   }
 
-  for(let key in result.blockMakers){
-    genesisTemplate.alloc[result.blockMakers[key]] = {
+  for(let key in result.addressList){
+    genesisTemplate.alloc[result.addressList[key]] = {
       "balance": "1000000000000000000000000000"
     }
   }
@@ -254,21 +260,41 @@ function getEnodePubKey(cb){
 }
 
 function generateEnode(result, cb){
-  var options = {encoding: 'utf8', timeout: 10*1000};
   console.log('Generating node key')
-  var child = exec('bootnode -genkey Blockchain/geth/nodekey', options)
-  child.stderr.on('data', function(error){
-    console.log('ERROR:', error)
-  })
-  child.stdout.on('close', function(error){
-    getEnodePubKey(function(err, pubKey){
-      let enode = 'enode://'+pubKey+'@'+result.localIpAddress+':'+ports.gethNode+
-        '?raftport='+ports.raftHttp
-      result.nodePubKey = pubKey
-      result.enodeList = [enode]
-      cb(null, result)
+  if(result.consensus === 'raft'){
+    let options = {encoding: 'utf8', timeout: 10*1000};
+    let child = exec('bootnode -genkey Blockchain/geth/nodekey', options)
+    child.stderr.on('data', function(error){
+      console.log('ERROR:', error)
     })
-  })
+    child.stdout.on('close', function(error){
+      getEnodePubKey(function(err, pubKey){
+        let enode = 'enode://'+pubKey+'@'+result.localIpAddress+':'+ports.gethNode+
+          '?raftport='+ports.raftHttp
+        result.nodePubKey = pubKey
+        result.enodeList = [enode]
+        cb(null, result)
+      })
+    })
+  } else if(result.consensus === 'istanbul'){
+    runIstanbulTools(function(err, dataString){
+      getIstanbulSetupFromIstanbulTools(dataString, function(err, validatorsJSON, staticNodesJSON, genesisJSON){
+        let validatorAddress = validatorsJSON['Address']
+        let enode = validatorsJSON['NodeInfo'].replace('0.0.0.0:30303?discport=0', result.localIpAddress+':'+ports.gethNode)
+        let nodePubKey =  enode.substring('enode://'.length, enode.indexOf('@'))
+        let nodekey = validatorsJSON['Nodekey']
+        console.log('To become a validator, please use the following address:', validatorAddress)
+        result.validatorAddress = validatorAddress
+        result.nodePubKey = nodePubKey
+        result.enodeList = [enode]
+        fs.writeFileSync('Blockchain/geth/nodekey', nodekey, 'utf8') 
+        cb(null, result)
+      })
+    })
+  } else {
+    console.log('ERROR: Invalid consensus choice')
+    cb(null, null)
+  }
 }
 
 function displayEnode(result, cb){
@@ -278,8 +304,6 @@ function displayEnode(result, cb){
     data = data.slice(0, -1)
     let enode = 'enode://'+data+'@'+result.localIpAddress+':'+ports.gethNode+'?raftport='+ports.raftHttp
     console.log('\nenode:', enode+'\n')
-    //result.nodePubKey = data
-    //result.enodeList = [enode] // TODO: investigate why this is a list
     cb(null, result)
   })
   child.stderr.on('data', function(error){
@@ -309,20 +333,173 @@ function displayCommunicationEnode(result, cb){
   })
 }
 
-function unlockAllAccounts(result, cb){
-  console.log('[INFO] Unlocking all accounts ...');
-  async.each(result.web3RPC.eth.accounts, function(account, callback){
-    result.web3IPC.personal.unlockAccount(account, '', 999999, function(err, res){
-      callback(err, res)
+function handleExistingFiles(result, cb){
+  if(result.keepExistingFiles == false){ 
+    let seqFunction = async.seq(
+      clearDirectories,
+      createDirectories
+    )
+    seqFunction(result, function(err, res){
+      if (err) { return console.log('ERROR', err) }
+      cb(null, res)
     })
-  }, function(err){
-    if(err){
-      console.log('ERROR:', err)
-    } else {
-      console.log('[INFO] All accounts unlocked')
-    }
+  } else {
     cb(null, result)
+  }
+}
+
+function createStaticNodeFile(enodeList, cb){
+  let options = {encoding: 'utf8', timeout: 100*1000};
+  let list = ''
+  for(let enode of enodeList){
+    list += '"'+enode+'",'
+  }
+  list = list.slice(0, -1)
+  let staticNodes = '['
+    + list
+    +']'
+  
+  fs.writeFile('Blockchain/static-nodes.json', staticNodes, function(err, res){
+    cb(err, res);
+  });
+}
+
+function getRaftConfiguration(result, cb){
+  if(setup.automatedSetup){
+    if(setup.enodeList){
+      result.enodeList = result.enodeList.concat(setup.enodeList) 
+    } 
+    createStaticNodeFile(result.enodeList, function(err, res){
+      result.communicationNetwork.staticNodesFileReady = true
+      cb(err, result)
+    })
+  } else {
+    console.log('Please wait for others to join. Hit any key + enter once done.')
+    prompt.get(['done'] , function (err, answer) {
+      if(result.communicationNetwork && result.communicationNetwork.enodeList){
+        result.enodeList = result.enodeList.concat(result.communicationNetwork.enodeList) 
+      }
+      createStaticNodeFile(result.enodeList, function(err, res){
+        result.communicationNetwork.staticNodesFileReady = true
+        cb(err, result)
+      })
+    })
+  }
+}
+
+function runIstanbulTools(cb){
+  let cmd = 'istanbul setup --nodes --verbose --num 1 --quorum';
+  let child = exec(cmd, function(){ })
+
+  let dataString = ''
+  child.stdout.on('data', function(chunk){
+    dataString += chunk
   })
+
+  child.stdout.on('end', function(){
+    cb(null, dataString)
+  })
+
+  child.stderr.on('data', function(error){
+    console.log('ERROR:', error)
+    cb(error, null)
+  })
+}
+
+function getIstanbulSetupFromIstanbulTools(dataString, cb){
+
+  let validatorsName = 'validators'
+  let staticNodesFileName = 'static-nodes.json'
+  let genesisFileName = 'genesis.json'
+  let validatorsIndex = dataString.indexOf('validators')
+  let staticNodesIndex = dataString.indexOf('static-nodes.json')
+  let genesisFileIndex = dataString.indexOf('genesis.json')
+
+  let validatorsFile = dataString.substring(validatorsName.length, staticNodesIndex)
+  let validatorsJSON = JSON.parse(validatorsFile)
+
+  let staticNodesJSON = JSON.parse(dataString.substring(staticNodesIndex+staticNodesFileName.length, genesisFileIndex))
+
+  let genesisJSON = JSON.parse(dataString.substring(genesisFileIndex+genesisFileName.length))
+
+  cb(null, validatorsJSON, staticNodesJSON, genesisJSON)
+}
+
+function getIstanbulConfiguration(result, cb){
+  if(setup.automatedSetup){
+    // TODO
+  } else {
+    runIstanbulTools(function(err, dataString){
+      getIstanbulSetupFromIstanbulTools(dataString, function(err, validatorsJSON, staticNodesJSON, genesisJSON){
+        let nodekeyFile = validatorsJSON['Nodekey']
+        fs.writeFileSync('Blockchain/geth/nodekey', nodekeyFile, 'utf8') 
+        
+        staticNodesJSON[0] = staticNodesJSON[0].replace('0.0.0.0:30303?discport=0', result.localIpAddress+':'+ports.gethNode)
+        fs.writeFileSync('Blockchain/static-nodes.json', JSON.stringify(staticNodesJSON), 'utf8') 
+
+        for(let key in result.addressList){
+          genesisJSON.alloc[result.addressList[key]] = {
+            "balance": "0x446c3b15f9926687d2c40534fdb564000000000000"
+          }
+        }
+        fs.writeFileSync('quorum-genesis.json', JSON.stringify(genesisJSON), 'utf8') 
+
+        result.communicationNetwork.genesisBlockConfigReady = true
+        result.communicationNetwork.staticNodesFileReady = true
+        cb(err, result)
+      })
+    })
+  }
+}
+
+function addAddresslistToQuorumConfig(result, cb){
+  if(setup.addressList && setup.addressList.length > 0){
+    result.addressList = result.addressList.concat(setup.addressList) 
+  } 
+  if(result.communicationNetwork && result.communicationNetwork.addressList){
+    result.addressList = result.addressList.concat(result.communicationNetwork.addressList) 
+  }
+  cb(null, result)
+}
+
+function handleNetworkConfiguration(result, cb){
+  if(result.keepExistingFiles == false){ 
+    let createGenesisBlockConfig = null
+    if(result.consensus === 'raft'){
+      let seqFunction = async.seq(
+        getRaftConfiguration,
+        getNewGethAccount,
+        addAddresslistToQuorumConfig,
+        createRaftGenesisBlockConfig,
+        constellation.CreateNewKeys, 
+        constellation.CreateConfig
+      )
+      seqFunction(result, function(err, res){
+        if (err) { return console.log('ERROR', err) }
+        cb(null, res)
+      })
+    } else if(result.consensus === 'istanbul') {
+      let seqFunction = async.seq(
+        getNewGethAccount,
+        addAddresslistToQuorumConfig,
+        getIstanbulConfiguration,
+        constellation.CreateNewKeys, 
+        constellation.CreateConfig
+      )
+      seqFunction(result, function(err, res){
+        if (err) { return console.log('ERROR', err) }
+        cb(null, res)
+      })
+    } else {
+      console.log('ERROR in handleNetworkConfiguration: Unknown consensus choice')
+      cb(null, null)
+    }
+
+  } else {
+    result.communicationNetwork.genesisBlockConfigReady = true
+    result.communicationNetwork.staticNodesFileReady = true
+    cb(null, result)
+  }
 }
 
 exports.Hex2a = hex2a
@@ -338,4 +515,7 @@ exports.IsWeb3RPCConnectionAlive = isWeb3RPCConnectionAlive
 exports.GenerateEnode = generateEnode
 exports.DisplayEnode = displayEnode
 exports.DisplayCommunicationEnode = displayCommunicationEnode
-exports.UnlockAllAccounts = unlockAllAccounts
+exports.handleExistingFiles = handleExistingFiles
+exports.generateEnode = generateEnode
+exports.displayEnode = displayEnode
+exports.handleNetworkConfiguration = handleNetworkConfiguration

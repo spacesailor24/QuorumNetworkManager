@@ -3,34 +3,30 @@ let exec = require('child_process').exec
 
 let whisper = require('./Communication/whisperNetwork.js')
 let util = require('./util.js')
+let constellation = require('./constellation.js')
 let peerHandler = require('./peerHandler.js')
 let fundingHandler = require('./fundingHandler.js')
 let ports = require('./config.js').ports
+let setup = require('./config.js').setup
 
-function startRaftNode(result, cb){
-  console.log('[*] Starting raft node...')
+function startIstanbulNode(result, cb){
+  console.log('[*] Starting istanbul node...')
   let options = {encoding: 'utf8', timeout: 100*1000}
-  let cmd = './startRaftNode.sh'
+  let cmd = './startIstanbulNode.sh'
   cmd += ' '+ports.gethNode
   cmd += ' '+ports.gethNodeRPC
   cmd += ' '+ports.gethNodeWS_RPC
-  cmd += ' '+ports.raftHttp
-  if(result.networkMembership === 'permissionedNodes'){
-    cmd += ' permissionedNodes' 
-  } else {
-    cmd += ' allowAll'
-  }
   let child = exec(cmd, options)
   child.stdout.on('data', function(data){
     cb(null, result)
   })
   child.stderr.on('data', function(error){
-    console.log('Start raft node ERROR:', error)
+    console.log('Start istanbul node ERROR:', error)
     cb(error, null)
   })
 }
 
-function startNewRaftNetwork(config, cb){
+function startNewIstanbulNetwork(config, cb){
   console.log('[*] Starting new node...')
 
   let nodeConfig = {
@@ -57,22 +53,20 @@ function startNewRaftNetwork(config, cb){
     "web3IPCHost": './Blockchain/geth.ipc',
     "web3RPCProvider": 'http://localhost:'+ports.gethNodeRPC,
     "web3WSRPCProvider": 'ws://localhost:'+ports.gethNodeWS_RPC,
-    consensus: 'raft'
+    consensus: 'istanbul'
   }
 
   let seqFunction = async.seq(
     util.handleExistingFiles,
-    util.generateEnode,
-    util.displayEnode,
     whisper.StartCommunicationNetwork,
     util.handleNetworkConfiguration,
-    startRaftNode,
+    startIstanbulNode,
     util.CreateWeb3Connection,
     whisper.AddEnodeResponseHandler,
     peerHandler.ListenForNewEnodes,
     whisper.AddEtherResponseHandler,
     fundingHandler.MonitorAccountBalances,
-    whisper.ExistingRaftNetworkMembership,
+    whisper.existingIstanbulNetworkMembership,
     whisper.PublishNodeInformation
   )
 
@@ -82,21 +76,20 @@ function startNewRaftNetwork(config, cb){
     cb(err, res)
   })
 }
-
-function handleStartingNewRaftNetwork(options, cb){
+function handleStartingNewIstanbulNetwork(options, cb){
   config = {}
   config.localIpAddress = options.localIpAddress
   config.networkMembership = options.networkMembership
   config.keepExistingFiles = options.keepExistingFiles
-  startNewRaftNetwork(config, function(err, result){
+  startNewIstanbulNetwork(config, function(err, result){
     if (err) { return console.log('ERROR', err) }
-    config.raftNetwork = Object.assign({}, result)
+    config.istanbulNetwork = Object.assign({}, result)
     let networks = {
-      raftNetwork: config.raftNetwork,
+      istanbulNetwork: config.istanbulNetwork,
       communicationNetwork: config.communicationNetwork
     }
     cb(err, networks)
   })
 }
 
-exports.HandleStartingNewRaftNetwork = handleStartingNewRaftNetwork
+exports.handleStartingNewIstanbulNetwork = handleStartingNewIstanbulNetwork

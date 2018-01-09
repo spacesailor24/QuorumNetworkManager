@@ -10,10 +10,12 @@ wget https://storage.googleapis.com/golang/go1.7.linux-amd64.tar.gz
 tar -xf go1.7.linux-amd64.tar.gz
 sudo cp -r go/ /usr/local/
 rm -rf go/ go1.7.linux-amd64.tar.gz
+echo "export GOROOT=/usr/local/go" >> ~/.bashrc
+echo "export GOPATH=$HOME/projects/go" >> ~/.bashrc
+echo "PATH=\$PATH:/usr/local/go/bin" >> ~/.bashrc
 export GOROOT=/usr/local/go
 export GOPATH=$HOME/projects/go
 export PATH=$GOPATH/bin:$GOROOT/bin:$PATH
-echo "PATH=\$PATH:/usr/local/go/bin" >> ~/.bashrc
 
 sudo apt-get install -y software-properties-common
 sudo add-apt-repository -y ppa:ethereum/ethereum
@@ -39,8 +41,13 @@ echo "PATH=\$PATH:"$PWD/constellation-0.1.0-ubuntu1604 >> ~/.bashrc
 source ~/.bashrc
 export PATH=$PWD/constellation-0.1.0-ubuntu1604:$PATH
 
+OLD_GOPATH=$GOPATH
+GOPATH=$PWD/istanbul-tools go get github.com/getamis/istanbul-tools/cmd/istanbul
+echo "PATH=\$PATH:"$PWD/istanbul-tools/bin >> ~/.bashrc
+export PATH=$PWD/istanbul-tools/bin:$PATH
+GOPATH=$OLD_GOPATH
+
 cd ..
 git clone https://github.com/consensys/QuorumNetworkManager.git
 cd QuorumNetworkManager/
-git checkout e53b5f19504a9884aa3e344be2d2a1c98d2f10d2
 npm install

@@ -13,38 +13,32 @@ let setup = require('./config.js').setup
 
 prompt.start()
 
-function startRaftNode(result, cb){
+function startIstanbulNode(result, cb){
+  console.log('[*] Starting istanbul node...')
   let options = {encoding: 'utf8', timeout: 100*1000}
-  let cmd = './startRaftNode.sh'
+  let cmd = './startIstanbulNode.sh'
   cmd += ' '+ports.gethNode
   cmd += ' '+ports.gethNodeRPC
   cmd += ' '+ports.gethNodeWS_RPC
-  cmd += ' '+ports.raftHttp
-  if(result.networkMembership === 'permissionedNodes'){
-    cmd += ' permissionedNodes' 
-  } else {
-    cmd += ' allowAll'
-  }
-  cmd += ' '+result.communicationNetwork.raftID
   let child = exec(cmd, options)
   child.stdout.on('data', function(data){
     cb(null, result)
   })
   child.stderr.on('data', function(error){
-    console.log('ERROR:', error)
+    console.log('Start istanbul node ERROR:', error)
     cb(error, null)
   })
 }
 
 function handleExistingFiles(result, cb){
-  if(result.keepExistingFiles == false){ 
+  if(result.keepExistingFiles === false){ 
     let seqFunction = async.seq(
       util.ClearDirectories,
       util.CreateDirectories,
       util.GetNewGethAccount,
-      util.GenerateEnode,    
+      util.GenerateEnode,
       util.DisplayEnode,
-      constellation.CreateNewKeys, 
+      constellation.CreateNewKeys,
       constellation.CreateConfig
     )
     seqFunction(result, function(err, res){
@@ -57,9 +51,9 @@ function handleExistingFiles(result, cb){
 }
 
 function handleNetworkConfiguration(result, cb){
-  if(result.keepExistingFiles == false){ 
+  if(result.keepExistingFiles === false){ 
     let seqFunction = async.seq(
-      whisper.RequestExistingRaftNetworkMembership,
+      whisper.requestExistingIstanbulNetworkMembership,
       whisper.GetGenesisBlockConfig,
       whisper.GetStaticNodesFile
     )
@@ -68,15 +62,12 @@ function handleNetworkConfiguration(result, cb){
       cb(null, res)
     })
   } else {
-    fs.readFile('Blockchain/raftID', function(err, data){
-      result.communicationNetwork.raftID = data 
-      cb(null, result)
-    })
+    cb(null, result)
   }
 }
 
-function joinRaftNetwork(config, cb){
-  console.log('[*] Starting new network...')
+function joinIstanbulNetwork(config, cb){
+  console.log('[*] Joining network...')
 
   let nodeConfig = {
     localIpAddress: config.localIpAddress,
@@ -102,18 +93,19 @@ function joinRaftNetwork(config, cb){
     "web3IPCHost": './Blockchain/geth.ipc',
     "web3RPCProvider": 'http://localhost:'+ports.gethNodeRPC,
     "web3WSRPCProvider": 'ws://localhost:'+ports.gethNodeWS_RPC,
-    consensus: 'raft'
+    consensus: 'istanbul'
   }
 
   let seqFunction = async.seq(
     handleExistingFiles,
     whisper.JoinCommunicationNetwork,
     handleNetworkConfiguration,
-    startRaftNode,
+    startIstanbulNode,
     util.CreateWeb3Connection,
     whisper.AddEnodeResponseHandler,
     peerHandler.ListenForNewEnodes,
     fundingHandler.MonitorAccountBalances,
+    whisper.existingIstanbulNetworkMembership,
     whisper.PublishNodeInformation
   )
 
@@ -135,13 +127,13 @@ function getRemoteIpAddress(cb){
   } 
 }
 
-function handleJoiningRaftNetwork(options, cb){
+function handleJoiningExistingIstanbulNetwork(options, cb){
   config = {}
   config.localIpAddress = options.localIpAddress
   config.keepExistingFiles = options.keepExistingFiles
   getRemoteIpAddress(function(remoteIpAddress){
     config.remoteIpAddress = remoteIpAddress
-    joinRaftNetwork(config, function(err, result){
+    joinIstanbulNetwork(config, function(err, result){
       if (err) { return console.log('ERROR', err) }
       let networks = {
         raftNetwork: Object.assign({}, result),
@@ -152,4 +144,4 @@ function handleJoiningRaftNetwork(options, cb){
   })
 }
 
-exports.HandleJoiningRaftNetwork = handleJoiningRaftNetwork
+exports.handleJoiningExistingIstanbulNetwork = handleJoiningExistingIstanbulNetwork
