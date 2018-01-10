@@ -1,7 +1,9 @@
 //TODO: These can be overwritten with commandline variables passed when running setupFromConfig
 
-let config = {}
 let env = process.env
+let config = {}
+
+config.chainId = 4058
 
 config.ports = {}
 config.ports.communicationNode = 50000

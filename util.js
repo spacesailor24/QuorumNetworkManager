@@ -5,8 +5,9 @@ var async = require('async')
 var prompt = require('prompt')
 prompt.start();
 
-var ports = require('./config.js').ports
-let setup = require('./config.js').setup
+let config = require('./config.js')
+let ports = config.ports
+let setup = config.setup
 
 let constellation = require('./constellation.js')
 
@@ -207,7 +208,7 @@ function createRaftGenesisBlockConfig(result, cb){
     "coinbase": result.addressList[0],
     "config": {
       "homesteadBlock": 0,
-      "chainId": 1,
+      "chainId": config.chainId,
       "eip155Block": null,
       "eip158Block": null,
       "isQuorum": true
@@ -437,6 +438,7 @@ function getIstanbulConfiguration(result, cb){
         staticNodesJSON[0] = staticNodesJSON[0].replace('0.0.0.0:30303?discport=0', result.localIpAddress+':'+ports.gethNode)
         fs.writeFileSync('Blockchain/static-nodes.json', JSON.stringify(staticNodesJSON), 'utf8') 
 
+        genesisJSON['config'].chainId = config.chainId
         for(let key in result.addressList){
           genesisJSON.alloc[result.addressList[key]] = {
             "balance": "0x446c3b15f9926687d2c40534fdb564000000000000"
