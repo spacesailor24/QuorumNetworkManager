@@ -104,6 +104,7 @@ function joinIstanbulNetwork(config, cb){
     util.CreateWeb3Connection,
     whisper.AddEnodeResponseHandler,
     peerHandler.ListenForNewEnodes,
+    whisper.AddEnodeRequestHandler,
     fundingHandler.MonitorAccountBalances,
     whisper.existingIstanbulNetworkMembership,
     whisper.PublishNodeInformation
