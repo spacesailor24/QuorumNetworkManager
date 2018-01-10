@@ -77,18 +77,17 @@ function addEnodeResponseHandler(result, cb){
   let shh = result.communicationNetwork.web3WSRPC.shh
   
   function onData(msg){
-    var message = null
+    let message = null
     if(msg && msg.payload){
       message = util.Hex2a(msg.payload)
     }
     if(message && message.indexOf(request.enode) >= 0){
       web3IPC.admin.nodeInfo(function(err, nodeInfo){
         if(err){console.log('addEnodeResponseHandler nodeInfo ERROR:', err)}
-        var enodeResponse = messageString.AppendData(response.enode, nodeInfo.enode);
+        let enodeResponse = messageString.AppendData(response.enode, nodeInfo.enode);
         enodeResponse = enodeResponse.replace('\[\:\:\]', result.localIpAddress)
-        var hexString = new Buffer(enodeResponse).toString('hex')
-        var postObj = messageString.BuildPostObject(['Enode'], hexString, 10, 1);
-        shh.post(postObj.JSON, function(err, res){
+
+        whisperUtils.post(enodeResponse, shh, 'Enode', function(err, res){
           if(err){console.log('addEnodeResponseHandler post ERROR:', err);}
         })
       })
