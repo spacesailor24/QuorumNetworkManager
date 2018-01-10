@@ -200,7 +200,7 @@ function staticNodesFileHandler(result, cb){
 // TODO: Add to and from fields to validate origins
 function getGenesisBlockConfig(result, cb){
 
-  console.log('[*] Requesting genesis block config. This will block until the other node is online')
+  console.log('[*] Requesting genesis block config. This will block until the other node responds')
 
   let shh = result.communicationNetwork.web3WSRPC.shh;
 
@@ -249,7 +249,7 @@ function getGenesisBlockConfig(result, cb){
 // TODO: Add to and from fields to validate origins
 function getStaticNodesFile(result, cb){
 
-  console.log('[*] Requesting static nodes file. This will block until the other node is online')
+  console.log('[*] Requesting static nodes file. This will block until the other node responds')
 
   let shh = result.communicationNetwork.web3WSRPC.shh;
 
