@@ -289,6 +289,7 @@ function generateEnode(result, cb){
         result.nodePubKey = nodePubKey
         result.enodeList = [enode]
         fs.writeFileSync('Blockchain/geth/nodekey', nodekey, 'utf8') 
+        fs.writeFileSync('Blockchain/validatorAddress', validatorAddress, 'utf8') 
         cb(null, result)
       })
     })
