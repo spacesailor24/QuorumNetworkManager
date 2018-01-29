@@ -37,7 +37,7 @@ workspace
 
 ## Option 1: Running the script
 
-The latest release can be found at: https://github.com/ConsenSys/QuorumNetworkManager/releases/tag/v0.7-alpha. Please follow its install instructions.
+The latest release can be found at: https://github.com/ConsenSys/QuorumNetworkManager/releases. Please follow its install instructions.
 
 ## OR | Option 2: Installing Manually		
 
@@ -48,7 +48,7 @@ The latest release can be found at: https://github.com/ConsenSys/QuorumNetworkMa
 3. NodeJS v8.x.x (tested on v8.x.x) (refer to https://nodejs.org/en/download/package-manager/ for installation)
 
 ### Installation
-Take a look at https://raw.githubusercontent.com/ConsenSys/QuorumNetworkManager/v0.7-alpha/setup.sh to see what is installed.
+Take a look at https://raw.githubusercontent.com/ConsenSys/QuorumNetworkManager/v0.7.1-alpha/setup.sh to see what is installed.
 
 # Firewall rules
 
