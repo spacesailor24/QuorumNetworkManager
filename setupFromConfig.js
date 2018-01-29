@@ -1,8 +1,9 @@
 let config = require('./config.js')
 let setup = config.setup
 let newRaftNetwork = require('./newRaftNetwork.js')
-let joinExisting = require('./joinExistingRaftNetwork.js')
+let joinExistingRaft = require('./joinExistingRaftNetwork.js')
 let newIstanbulNetwork = require('./newIstanbulNetwork.js')
+let joinExistingIstanbul = require('./joinExistingIstanbulNetwork.js')
 
 function run(){
   console.log('[SetupFromConfig] Starting setup from config')
@@ -25,7 +26,7 @@ function run(){
       console.log('TODO: non-coordinator')
     } else if (config.setup.role === 'dynamicPeer'){
       config.setup.automatedSetup = true
-      joinExisting.HandleJoiningRaftNetwork(config.setup, function(err, result){
+      joinExistingRaft.HandleJoiningRaftNetwork(config.setup, function(err, result){
         if(err){console.log('ERROR:', err)} 
         console.log('[SetupFromConfig] All done. Leave this running, ideally inside screen')
       })
@@ -39,11 +40,9 @@ function run(){
         if(err){console.log('ERROR:', err)} 
         console.log('[SetupFromConfig] All done. Leave this running, ideally inside screen')
       })
-    } else if (config.setup.role === 'non-coordinator'){
-      console.log('TODO: non-coordinator')
     } else if (config.setup.role === 'dynamicPeer'){
       config.setup.automatedSetup = true
-      joinExisting.HandleJoiningRaftNetwork(config.setup, function(err, result){
+      joinExistingIstanbul.handleJoiningExistingIstanbulNetwork(config.setup, function(err, result){
         if(err){console.log('ERROR:', err)} 
         console.log('[SetupFromConfig] All done. Leave this running, ideally inside screen')
       })

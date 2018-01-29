@@ -51,6 +51,7 @@ Blockchain/raft-wal*
 Blockchain/geth*
 Blockchain/keystore*
 Blockchain/raftID
+Blockchain
 quorum-config.json
 quorum-genesis.json
 
