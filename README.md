@@ -3,25 +3,14 @@
 1. Introduction & Additional functionality
 2. Getting started
 3. Start node from config
-4. Running
+4. Running from cli prompt
 5. Firewall rules
 6. Constellation
 
+
 # Introduction & Additional functionality
 
-This project's goal is to help getting started with a basic Quorum network. Note that this project is still in its early days and as such, it is not production ready and is very limited in functionality. 
-
-The Quorum Network Manager (QNM) allows users to create and manage Quorum networks easily. It currently supports creating both QuorumChain (for older versions) and RAFT based consensus networks. Based on a user’s consensus choice, the QNM then starts a Quorum network.
-
-For QuorumChain consensus, a coordinator node has the option to specify the number of block makers and voters. The coordinator node then creates a genesis block based on these choices and distributes the genesis block (using Whisper) to the other peers in the network. The QNM also uses Whisper to coordinate adding peers to the network, as well as distribute ether so that peers can submit transactions.
-
-For RAFT consensus, a coordinator node gathers peer information (enode, wallet address) via Whisper so that it can generate a genesis block (with peer wallet addresses in) and the static-node.json file. The genesis block and static-nodes.json file is distributed to peers using Whisper. The static-nodes.json file is used by RAFT to determine the index of members of the RAFT setup.
-
-The QNM facilitates dynamic peer addition: using Whisper, the coordinating node can communicate the genesis block and the static-nodes.json file to a new peer. The QNM also collects information about new peers. The new peer’s enode is used to add it as a new peer to RAFT and its wallet address is used to send ether to the new peer.
-
-The QNM also allows peer information sharing. Each QNM node publishes node information (Constellation key, wallet address, ip address, node public key, Whisper identity, etc.) to the Whisper network at regular intervals. Other QNM nodes then receives this information and writes it to the networkNodesInfo.json file.
-
-Additional functionnality includes (but is not limited to) options regarding adding more blockmakers and voters, using a different consensus mechanism (e.g. switching to raft) as well as performance testing.
+The introduction has been moved to https://github.com/ConsenSys/QuorumNetworkManager/wiki
 
 # Getting started
 
@@ -48,7 +37,7 @@ The latest release can be found at: https://github.com/ConsenSys/QuorumNetworkMa
 3. NodeJS v8.x.x (tested on v8.x.x) (refer to https://nodejs.org/en/download/package-manager/ for installation)
 
 ### Installation
-Take a look at https://raw.githubusercontent.com/ConsenSys/QuorumNetworkManager/v0.7.1-alpha/setup.sh to see what is installed.
+Take a look at https://raw.githubusercontent.com/ConsenSys/QuorumNetworkManager/v0.7.2-alpha/setup.sh to see what is installed.
 
 # Firewall rules
 
@@ -72,11 +61,33 @@ Port: TCP 9000
 
 # Running from config
 
-By setting options in the `config.js` file, users can now start a node with `node setupFromConfig.js`.
+By setting options in the `config.js` file, users can now start a node with `node setupFromConfig.js`.  To start a raft coordinating node, simply run `node setupFromConfig.js`
 
-Tip1: use `killall -9 geth constellation-node` to make sure there are no other running instances of geth or constellation-node    
+## Running with pm2
 
-Tip2: start this script with `screen node setupFromConfig.js`. Detach from screen with `Ctrl + A + D`.
+Install pm2: `npm install pm2@latest -g`
+
+Start the script with `pm2 start setupFromConfig.js`. To list all pm2: `pm2 l`, to stop all: `pm2 stop all`. To completely unload all pm2 processes: `pm2 kill`.
+
+## Start a 2 node Istanbul network
+
+There are environment variables that can also be set.    
+
+`IP=<coordinating node ip address> KEEP_FILES=false NODE_NAME=node1 CONSENSUS=istanbul pm2 start setupFromConfig.js`    
+
+To connect a 2nd node to the network:    
+
+`IP=<ip address of 2nd node> COORDINATING_IP=<coordinating node ip address> ROLE=dynamicPeer KEEP_FILES=false NODE_NAME=node2 CONSENSUS=istanbul pm2 start setupFromConfig.js`    
+
+## Troubleshooting
+
+Use `killall -9 geth constellation-node` to make sure there are no other running instances of geth or constellation-node.    
+
+To ensure you are starting from a clean slate:
+1. `pm2 stop all`
+2. `pm2 kill`
+3. `killall -9 screen`
+4. `killall -9 geth constellation-node`
 
 # Running from cli prompt
 
