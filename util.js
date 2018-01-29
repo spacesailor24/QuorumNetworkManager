@@ -428,31 +428,27 @@ function getIstanbulSetupFromIstanbulTools(dataString, cb){
 }
 
 function getIstanbulConfiguration(result, cb){
-  if(setup.automatedSetup){
-    // TODO
-  } else {
-    runIstanbulTools(function(err, dataString){
-      getIstanbulSetupFromIstanbulTools(dataString, function(err, validatorsJSON, staticNodesJSON, genesisJSON){
-        let nodekeyFile = validatorsJSON['Nodekey']
-        fs.writeFileSync('Blockchain/geth/nodekey', nodekeyFile, 'utf8') 
-        
-        staticNodesJSON[0] = staticNodesJSON[0].replace('0.0.0.0:30303?discport=0', result.localIpAddress+':'+ports.gethNode)
-        fs.writeFileSync('Blockchain/static-nodes.json', JSON.stringify(staticNodesJSON), 'utf8') 
+  runIstanbulTools(function(err, dataString){
+    getIstanbulSetupFromIstanbulTools(dataString, function(err, validatorsJSON, staticNodesJSON, genesisJSON){
+      let nodekeyFile = validatorsJSON['Nodekey']
+      fs.writeFileSync('Blockchain/geth/nodekey', nodekeyFile, 'utf8') 
+      
+      staticNodesJSON[0] = staticNodesJSON[0].replace('0.0.0.0:30303?discport=0', result.localIpAddress+':'+ports.gethNode)
+      fs.writeFileSync('Blockchain/static-nodes.json', JSON.stringify(staticNodesJSON), 'utf8') 
 
-        genesisJSON['config'].chainId = config.chainId
-        for(let key in result.addressList){
-          genesisJSON.alloc[result.addressList[key]] = {
-            "balance": "0x446c3b15f9926687d2c40534fdb564000000000000"
-          }
+      genesisJSON['config'].chainId = config.chainId
+      for(let key in result.addressList){
+        genesisJSON.alloc[result.addressList[key]] = {
+          "balance": "0x446c3b15f9926687d2c40534fdb564000000000000"
         }
-        fs.writeFileSync('quorum-genesis.json', JSON.stringify(genesisJSON), 'utf8') 
+      }
+      fs.writeFileSync('quorum-genesis.json', JSON.stringify(genesisJSON), 'utf8') 
 
-        result.communicationNetwork.genesisBlockConfigReady = true
-        result.communicationNetwork.staticNodesFileReady = true
-        cb(err, result)
-      })
+      result.communicationNetwork.genesisBlockConfigReady = true
+      result.communicationNetwork.staticNodesFileReady = true
+      cb(err, result)
     })
-  }
+  })
 }
 
 function addAddresslistToQuorumConfig(result, cb){

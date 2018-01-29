@@ -2,6 +2,7 @@ let config = require('./config.js')
 let setup = config.setup
 let newRaftNetwork = require('./newRaftNetwork.js')
 let joinExisting = require('./joinExistingRaftNetwork.js')
+let newIstanbulNetwork = require('./newIstanbulNetwork.js')
 
 function run(){
   console.log('[SetupFromConfig] Starting setup from config')
@@ -31,8 +32,26 @@ function run(){
     } else {
       console.log('Unsupported option:', config.setup.role)
     }    
+  } else if(config.setup.consensus === 'istanbul'){
+    if(config.setup.role === 'coordinator'){
+      config.setup.automatedSetup = true
+      newIstanbulNetwork.handleStartingNewIstanbulNetwork(config.setup, function(err, result){
+        if(err){console.log('ERROR:', err)} 
+        console.log('[SetupFromConfig] All done. Leave this running, ideally inside screen')
+      })
+    } else if (config.setup.role === 'non-coordinator'){
+      console.log('TODO: non-coordinator')
+    } else if (config.setup.role === 'dynamicPeer'){
+      config.setup.automatedSetup = true
+      joinExisting.HandleJoiningRaftNetwork(config.setup, function(err, result){
+        if(err){console.log('ERROR:', err)} 
+        console.log('[SetupFromConfig] All done. Leave this running, ideally inside screen')
+      })
+    } else {
+      console.log('Unsupported option:', config.setup.role)
+    }    
   } else {
-    console.log('raft is the only consensus option currently supported by this setup')
+    console.log('Only RAFT and Istanbul-BFT is supported')
   }
 }
 
