@@ -16,6 +16,6 @@ WS_RPC_ARGS="--ws --wsaddr 0.0.0.0 --wsport $3 --wsapi $RPC_API --wsorigins=*"
 
 ALL_ARGS="$FLAGS $HTTP_RPC_ARGS $WS_RPC_ARGS"
 
-PRIVATE_CONFIG=constellation.config nohup geth $ALL_ARGS &> gethNode.log &
+PRIVATE_CONFIG=constellation.config nohup geth $ALL_ARGS --targetgaslimit 50000000 &> gethNode.log &
 
 echo "[*] Node started"

@@ -423,6 +423,8 @@ function getIstanbulSetupFromIstanbulTools(dataString, cb){
   let staticNodesJSON = JSON.parse(dataString.substring(staticNodesIndex+staticNodesFileName.length, genesisFileIndex))
 
   let genesisJSON = JSON.parse(dataString.substring(genesisFileIndex+genesisFileName.length))
+  let gasLimit = 50000000
+  genesisJSON.gasLimit = '0x' + gasLimit.toString(16)
 
   cb(null, validatorsJSON, staticNodesJSON, genesisJSON)
 }
