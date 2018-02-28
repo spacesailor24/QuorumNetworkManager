@@ -6,11 +6,13 @@ let util = require('./util.js')
 let peerHandler = require('./peerHandler.js')
 let fundingHandler = require('./fundingHandler.js')
 let ports = require('./config.js').ports
+let setup = require('./config.js').setup
 
 function startRaftNode(result, cb){
   console.log('[*] Starting raft node...')
   let options = {encoding: 'utf8', timeout: 100*1000}
   let cmd = './startRaftNode.sh'
+  cmd += ' '+setup.targetGasLimit
   cmd += ' '+ports.gethNode
   cmd += ' '+ports.gethNodeRPC
   cmd += ' '+ports.gethNodeWS_RPC
