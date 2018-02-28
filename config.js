@@ -50,5 +50,7 @@ config.setup.remoteIpAddress = env.COORDINATING_IP ? env.COORDINATING_IP : '127.
 config.setup.automatedSetup = false
 // The target gas limit that this node will be voting for
 config.setup.targetGasLimit = env.TARGET_GAS_LIMIT ? env.TARGET_GAS_LIMIT : '10000000'
+// The block gas limit specified in the genesis config (only used if this node is the coordinator)
+config.setup.genesisGasLimit = env.GENESIS_GAS_LIMIT ? env.GENESIS_GAS_LIMIT : '10000000'
 
 module.exports = config
