@@ -215,7 +215,7 @@ function createRaftGenesisBlockConfig(result, cb){
     },
     "difficulty": "0x0",
     "extraData": "0x0000000000000000000000000000000000000000000000000000000000000000",
-    "gasLimit": "0xE0000000",
+    "gasLimit": setup.genesisGasLimit,
     "mixhash": "0x00000000000000000000000000000000000000647572616c65787365646c6578",
     "nonce": "0x0",
     "parentHash": "0x0000000000000000000000000000000000000000000000000000000000000000",
@@ -423,8 +423,7 @@ function getIstanbulSetupFromIstanbulTools(dataString, cb){
   let staticNodesJSON = JSON.parse(dataString.substring(staticNodesIndex+staticNodesFileName.length, genesisFileIndex))
 
   let genesisJSON = JSON.parse(dataString.substring(genesisFileIndex+genesisFileName.length))
-  let gasLimit = 50000000
-  genesisJSON.gasLimit = '0x' + gasLimit.toString(16)
+  genesisJSON.gasLimit = setup.genesisGasLimit
 
   cb(null, validatorsJSON, staticNodesJSON, genesisJSON)
 }
