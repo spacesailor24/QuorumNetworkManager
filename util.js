@@ -208,6 +208,7 @@ function createRaftGenesisBlockConfig(result, cb){
     "coinbase": result.addressList[0],
     "config": {
       "homesteadBlock": 0,
+      "byzantiumBlock": 0,
       "chainId": config.chainId,
       "eip155Block": null,
       "eip158Block": null,
@@ -438,6 +439,7 @@ function getIstanbulConfiguration(result, cb){
       fs.writeFileSync('Blockchain/static-nodes.json', JSON.stringify(staticNodesJSON), 'utf8') 
 
       genesisJSON['config'].chainId = config.chainId
+      genesisJSON['config'].byzantiumBlock = 1
       for(let key in result.addressList){
         genesisJSON.alloc[result.addressList[key]] = {
           "balance": "0x446c3b15f9926687d2c40534fdb564000000000000"
