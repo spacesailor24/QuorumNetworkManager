@@ -208,6 +208,7 @@ function createRaftGenesisBlockConfig(result, cb){
     "coinbase": result.addressList[0],
     "config": {
       "homesteadBlock": 0,
+      "byzantiumBlock": 0,
       "chainId": config.chainId,
       "eip155Block": null,
       "eip158Block": null,
@@ -215,7 +216,7 @@ function createRaftGenesisBlockConfig(result, cb){
     },
     "difficulty": "0x0",
     "extraData": "0x0000000000000000000000000000000000000000000000000000000000000000",
-    "gasLimit": "0xE0000000",
+    "gasLimit": setup.genesisGasLimit,
     "mixhash": "0x00000000000000000000000000000000000000647572616c65787365646c6578",
     "nonce": "0x0",
     "parentHash": "0x0000000000000000000000000000000000000000000000000000000000000000",
@@ -423,8 +424,7 @@ function getIstanbulSetupFromIstanbulTools(dataString, cb){
   let staticNodesJSON = JSON.parse(dataString.substring(staticNodesIndex+staticNodesFileName.length, genesisFileIndex))
 
   let genesisJSON = JSON.parse(dataString.substring(genesisFileIndex+genesisFileName.length))
-  let gasLimit = 50000000
-  genesisJSON.gasLimit = '0x' + gasLimit.toString(16)
+  genesisJSON.gasLimit = setup.genesisGasLimit
 
   cb(null, validatorsJSON, staticNodesJSON, genesisJSON)
 }
@@ -439,6 +439,7 @@ function getIstanbulConfiguration(result, cb){
       fs.writeFileSync('Blockchain/static-nodes.json', JSON.stringify(staticNodesJSON), 'utf8') 
 
       genesisJSON['config'].chainId = config.chainId
+      genesisJSON['config'].byzantiumBlock = 1
       for(let key in result.addressList){
         genesisJSON.alloc[result.addressList[key]] = {
           "balance": "0x446c3b15f9926687d2c40534fdb564000000000000"
