@@ -9,6 +9,18 @@ var publish = messageString.Publish
 
 var networkNodesInfo = {}
 
+async function getPublicWhisperKey(shh, whisperId){
+  return new Promise(function(resolve, reject){
+    shh.getPublicKey(whisperId, function(err, publicKey){
+      if(err){
+        console.log('ERROR in getPublicWhisperKey:', err)
+        reject(err)
+      }
+      resolve(publicKey)
+    })
+  })
+}
+
 // TODO: Add to and from fields to validate origins
 function publishNodeInformation(result, cb){
 
@@ -21,14 +33,18 @@ function publishNodeInformation(result, cb){
   let nodeInformationPostIntervalID = null
   let accountList = web3HttpRPC.eth.accounts
 
-  whisperUtils.getAsymmetricKey(shh, function(err, id) {
+  whisperUtils.getAsymmetricKey(shh, async function(err, id) {
+
+    let pubKey = await getPublicWhisperKey(shh, id)
+
     let nodeInfo = {
       whisperId: id,
+      whisperPubKey: pubKey,
       nodePubKey: result.nodePubKey,
       ipAddress: result.localIpAddress,
       nodeName: config.identity.nodeName,
       address: accountList[0],
-      constellationPublicKey: constellationPublicKey
+      constellationPublicKey,
     }
        
     let message = messageString.BuildDelimitedString(publish.nodeInfo, JSON.stringify(nodeInfo))
