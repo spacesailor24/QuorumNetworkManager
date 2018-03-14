@@ -1,3 +1,4 @@
+var fs = require('fs');
 let config = require('./config.js')
 let setup = config.setup
 let newRaftNetwork = require('./newRaftNetwork.js')
@@ -14,6 +15,7 @@ function run(){
   console.log('[CONSENSUS]', setup.consensus)
   console.log('[ROLE]', setup.role)
   console.log('[KEEP_FILES]', setup.keepExistingFiles)
+  console.log('[DELETE_KEYS]', setup.deleteKeys)
   console.log('==== Setup config ====')
   if(config.setup.consensus === 'raft'){
     if(config.setup.role === 'coordinator'){
@@ -50,7 +52,7 @@ function run(){
       console.log('Unsupported option:', config.setup.role)
     }    
   } else {
-    console.log('Only RAFT and Istanbul-BFT is supported')
+    console.log('Only raft and istanbul are supported')
   }
 }
 
