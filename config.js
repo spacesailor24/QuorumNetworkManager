@@ -34,8 +34,10 @@ config.setup = {}
 config.setup.localIpAddress = env.IP ? env.IP : '127.0.0.1'
 // Only allowAll for now
 config.setup.networkMembership = env.NETWORK_MEMBERSHIP ? env.NETWORK_MEMBERSHIP : 'allowAll'
-// Options are true or false
+// Options are true or false. This refers to the blockchain files
 config.setup.keepExistingFiles = (env.KEEP_FILES == 'true')
+// Options are true or false. This refers to the nodekey and keystore
+config.setup.deleteKeys = (env.DELETE_KEYS == 'true')
 // Only raft supported for now
 config.setup.consensus = env.CONSENSUS ? env.CONSENSUS : 'raft'
 // Options are coordinator, non-coordinator, dynamicPeer
