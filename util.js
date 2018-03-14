@@ -30,6 +30,14 @@ function clearDirectories(result, cb){
     var folder = result.folders[i];
     cmd += ' '+folder;    
   }
+  if(result.folders.includes('Blockchain') && config.setup.deleteKeys === false 
+      && fs.existsSync('Blockchain/keystore')){
+    console.log('[*] Backing up previous keys')
+    let backupKeys = 'cp -r Blockchain/keystore . && cp Blockchain/geth/nodekey . && ' 
+    cmd = backupKeys + cmd
+  } else if(result.folders.includes('Blockchain')) {
+    console.log('[*] Not backing up previous keys')
+  }
   var child = exec(cmd, function(){
     cb(null, result);
   });
@@ -40,10 +48,19 @@ function clearDirectories(result, cb){
 }
 
 function createDirectories(result, cb){
-  var cmd = 'mkdir';
+  var cmd = 'mkdir -p';
   for(var i in result.folders){
     var folder = result.folders[i];
     cmd += ' '+folder;    
+  }
+  if(result.folders.includes('Blockchain') && config.setup.deleteKeys === false 
+      && fs.existsSync('keystore') && fs.readdirSync('keystore').length > 0){
+    console.log('[*] Restoring previous keys')
+    let backupKeys = ' && mkdir -p Blockchain/keystore && mv keystore/* Blockchain/keystore/' 
+    backupKeys += ' && mv nodekey Blockchain/geth/ && rm -rf keystore' 
+    cmd = cmd + backupKeys
+  } else if(result.folders.includes('Blockchain')) {
+    console.log('[*] Not reusing old keys')
   }
   var child = exec(cmd, function(){
     cb(null, result);
@@ -140,30 +157,59 @@ function connectToPeer(result, cb){
   });
 }
 
-function getNewGethAccount(result, cb){
-  var options = {encoding: 'utf8', timeout: 10*1000};
-  var child = exec('geth --datadir Blockchain account new', options);
+function getExistingDefaultAccount(result, cb){
+  var options = {encoding: 'utf8', timeout: 10*1000}
+  var child = exec('geth --datadir Blockchain account list', options)
   child.stdout.on('data', function(data){
-    if(data.indexOf('Your new account') >= 0){
-      child.stdin.write('\n');
-    } else if(data.indexOf('Repeat') >= 0){
-      child.stdin.write('\n');
-    } else if(data.indexOf('Address') == 0){
-      var index = data.indexOf('{');
-      var address = '0x'+data.substring(index+1, data.length-2);
+    if(data.indexOf('Account #0') >= 0){
+      var index1 = data.indexOf('{')
+      var index2 = data.indexOf('}')
+      var address = '0x'+data.substring(index1+1, index2)
       if(result.addressList == undefined){
-        result.addressList = [];
+        result.addressList = []
       }
       result.addressList.push(address);
-      cb(null, result);
+      cb(null, result)
     } 
-  });
+  })
   child.stderr.on('data', function(error){
     if(error.indexOf('No etherbase set and no accounts found as default') < 0){
-      console.log('ERROR:', error);
-      cb(error, null);
+      console.log('ERROR:', error)
+      cb(error, null)
     }
-  });
+  })
+}
+
+function getNewGethAccount(result, cb){
+  if(config.setup.deleteKeys === true){
+    var options = {encoding: 'utf8', timeout: 10*1000}
+    var child = exec('geth --datadir Blockchain account new', options)
+    child.stdout.on('data', function(data){
+      if(data.indexOf('Your new account') >= 0){
+        child.stdin.write('\n')
+      } else if(data.indexOf('Repeat') >= 0){
+        child.stdin.write('\n')
+      } else if(data.indexOf('Address') == 0){
+        var index = data.indexOf('{')
+        var address = '0x'+data.substring(index+1, data.length-2)
+        if(result.addressList == undefined){
+          result.addressList = []
+        }
+        result.addressList.push(address);
+        cb(null, result)
+      } 
+    })
+    child.stderr.on('data', function(error){
+      if(error.indexOf('No etherbase set and no accounts found as default') < 0){
+        console.log('ERROR:', error)
+        cb(error, null)
+      }
+    })
+  } else {
+    getExistingDefaultAccount(result, function(accountAddress){
+      cb(null, result)
+    })
+  }
 }
 
 function instanceAlreadyRunningMessage(processName){
