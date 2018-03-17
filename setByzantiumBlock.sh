@@ -19,6 +19,19 @@ else
 
     # delete pending transactions
     rm Blockchain/geth/transactions.rlp
+    
+    # if resync is requested
+    if [ $# == 3 ]
+    then
+      if [ $3 == "removechain" ]
+      then
+        rm -rf Blockchain/geth/chaindata/
+        rm -rf Blockchain/geth/lightchaindata/
+        rm -rf Blockchain/geth/LOCK
+      else
+        echo "Unknown parameter $3"
+      fi
+    fi
 
     # add the byzantiumBlock to the genesis config
     node addByzantiumBlockToGenesis.js $1
