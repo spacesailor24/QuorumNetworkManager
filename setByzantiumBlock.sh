@@ -9,8 +9,9 @@ else
   then
     echo "Setting byzantiumBlock to $1"
     # gracefully shut the client down
-    ./shutdown.sh
     pm2 stop setupFromConfig
+    ./shutdown.sh
+    killall geth # kill any remaining geth processes
 
     # create a backup of the keystore and nodekey
     mkdir -p ../backup
