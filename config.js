@@ -27,6 +27,9 @@ config.whisper.asymKeyID = null
 config.whisper.id = null
 config.whisper.powTime = 3
 config.whisper.powTarget = 0.5
+config.whisper.diskEncryptionPassword = 'insertSecurePassword' || process.env.WHISPER_DISK_ENCRYPTION_PASSWORD
+config.whisper.diskEncryptionDirectory = 'WhisperKeys' || process.env.WHISPER_DISK_ENCRYPTION_DIRECTORY
+config.whisper.diskEncryptionFileName = 'whisperKeys.txt'
 
 // Change these for different setups. 
 config.setup = {}

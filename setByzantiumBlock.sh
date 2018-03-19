@@ -14,9 +14,13 @@ else
     killall geth # kill any remaining geth processes
 
     # create a backup of the keystore and nodekey
-    mkdir -p ../backup
-    cp -r Blockchain/keystore ../backup/.
-    cp Blockchain/geth/nodekey ../backup/.
+    mkdir -p ../backup_QNM
+    cp -r Blockchain/keystore ../backup_QNM/.
+    cp Blockchain/geth/nodekey ../backup_QNM/.
+    if [ -d "WhisperKeys" ]
+    then
+      cp -r WhisperKeys ../backup_QNM/.
+    fi
 
     # delete pending transactions
     rm Blockchain/geth/transactions.rlp

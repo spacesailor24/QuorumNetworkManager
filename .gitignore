@@ -44,6 +44,7 @@ jspm_packages
 *.swn
 
 # Blockchain data files
+WhisperKeys/*
 Blockchain/raft-snap*
 Blockchain/static-nodes.json
 Blockchain/quorum-raft-state*
