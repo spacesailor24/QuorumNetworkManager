@@ -32,12 +32,12 @@ The latest release can be found at: https://github.com/ConsenSys/QuorumNetworkMa
 
 ### Requirements
 
-1. go 1.7.3/4/5 (this has to do with go-ethereum not working with go 1.8) - https://golang.org/dl/
+1. go 1.7.3/4/5 (this has to do with go-ethereum 1.7.* not working with go 1.8+) - https://golang.org/dl/
 2. Ubuntu 16.04 (this has to do with installing Constellation)
 3. NodeJS v8.x.x (tested on v8.x.x) (refer to https://nodejs.org/en/download/package-manager/ for installation)
 
 ### Installation
-Take a look at https://raw.githubusercontent.com/ConsenSys/QuorumNetworkManager/v0.7.2-alpha/setup.sh to see what is installed.
+Take a look at https://raw.githubusercontent.com/ConsenSys/QuorumNetworkManager/v0.7.3-beta/setup.sh to see what is installed.
 
 # Firewall rules
 
@@ -58,6 +58,8 @@ constellation-network
 Port: TCP 9000
 
 ```
+
+As ethereum networks rely on an accurate server time, please ensure outbound ports allow for the server time to stay in sync.
 
 # Running from config
 
