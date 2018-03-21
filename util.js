@@ -31,7 +31,7 @@ function clearDirectories(result, cb){
     cmd += ' '+folder;    
   }
   if(result.folders.includes('Blockchain') && config.setup.deleteKeys === false 
-      && fs.existsSync('Blockchain/keystore')){
+      && fs.existsSync('Blockchain/keystore') && fs.existsSync('Blockchain/geth/nodekey')){
     console.log('[*] Backing up previous keys')
     let backupKeys = 'cp -r Blockchain/keystore . && cp Blockchain/geth/nodekey . && ' 
     cmd = backupKeys + cmd
@@ -181,7 +181,7 @@ function getExistingDefaultAccount(result, cb){
 }
 
 function getNewGethAccount(result, cb){
-  if(config.setup.deleteKeys === true){
+  if(config.setup.deleteKeys === true || fs.existsSync('Blockchain/keystore/*') == false){
     var options = {encoding: 'utf8', timeout: 10*1000}
     var child = exec('geth --datadir Blockchain account new', options)
     child.stdout.on('data', function(data){
