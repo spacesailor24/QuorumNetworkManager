@@ -8,7 +8,7 @@ nohup constellation-node constellation.config &> constellation.log &
 
 sleep 5
 
-FLAGS="--datadir Blockchain --targetgaslimit $1 --shh --port $2 --unlock 0 --password passwords.txt --syncmode full --mine --nodiscover --cache=1024"
+FLAGS="--datadir Blockchain --targetgaslimit $1 --shh --port $2 --unlock 0 --password passwords.txt --syncmode full --mine --nodiscover"
 
 RPC_API="admin,db,eth,debug,miner,net,shh,txpool,personal,web3,quorum,istanbul"
 HTTP_RPC_ARGS="--rpc --rpcaddr 0.0.0.0 --rpcport $3 --rpcapi $RPC_API"
