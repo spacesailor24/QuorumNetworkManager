@@ -50,5 +50,5 @@ GOPATH=$OLD_GOPATH
 cd ..
 git clone https://github.com/consensys/QuorumNetworkManager.git
 cd QuorumNetworkManager/
-git checkout v0.7.2-alpha
+git checkout v0.7.5-beta
 npm install
