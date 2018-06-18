@@ -6,7 +6,7 @@ function checkVersionOfConstellation(cb){
   let cmd = 'constellation-node --version'
   let child = exec(cmd)
   child.stdout.on('data', function(data){
-    if(data.includes('Constellation Node 0.1.0') == false){
+    if(data.includes('Constellation Node 0.3.2') == false){
       console.log('Incorrect version of constellation installed, please refer to', helpUrl)
       cb(false)
     } else {
