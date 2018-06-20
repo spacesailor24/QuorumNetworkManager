@@ -9,4 +9,5 @@ CONSTELLATION_BIN_PATH="$(which constellation-node)"
 CONSTELLATION_BIN_DIR="$(dirname $CONSTELLATION_BIN_PATH)"
 REMOVE_FROM_BASHRC="/PATH=\\\$PATH:$(echo $CONSTELLATION_BIN_DIR | sed -e 's/\\/\\\\/g; s/\//\\\//g; s/&/\\\&/g')/d"
 sed -i $REMOVE_FROM_BASHRC ~/.bashrc
-echo "Removed constellation binaries and bashrc entries. Left directory $CONSTELLATION_BIN_DIR for manual deletion"
+[ -e $CONSTELLATION_BIN_DIR ] && rm -rf $CONSTELLATION_BIN_DIR
+echo "Removed constellation binaries and bashrc entries."
