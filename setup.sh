@@ -3,6 +3,18 @@
 #TODO: Add version check for nodejs as well
 #TODO: extract versions to variables
 
+sudo apt-get update
+sudo apt-get install -y build-essential libssl-dev git curl
+
+# Install NodeJS
+NODEJS_VERSION=$(node --version)
+if [[ $NODEJS_VERSION = "" ]]
+then
+  curl -sL https://deb.nodesource.com/setup_8.x | sudo -E bash -
+  sudo apt-get install -y nodejs
+fi
+
+# Checking GO version
 echo 'Checking go version, if not found will install'
 GO_VERSION=$(go version)
 if [[ $GO_VERSION != 'go version go1.10.3 linux/amd64' ]] && [[ $GO_VERSION != "" ]]
@@ -13,16 +25,7 @@ then
   exit
 fi
 
-sudo apt-get update
-sudo apt-get install -y build-essential libssl-dev git curl
-
-NODEJS_VERSION=$(node --version)
-if [[ $NODEJS_VERSION = "" ]]
-then
-  curl -sL https://deb.nodesource.com/setup_8.x | sudo -E bash -
-  sudo apt-get install -y nodejs
-fi
-
+# Install GO
 if [[ $GO_VERSION = "" ]]
 then
   wget https://storage.googleapis.com/golang/go1.10.3.linux-amd64.tar.gz
@@ -38,12 +41,14 @@ then
   echo 'installed go version 1.10.3'
 fi
 
+# Moving geth
 GETH_PATH=$(which geth)
 if [[ $GETH_PATH = '/usr/bin/geth' ]]
 then
   sudo mv /usr/bin/geth /usr/bin/normalGeth
 fi
 
+# Cloning the quorum repo
 if [ ! -d "quorum" ]
 then
   git clone https://github.com/jpmorganchase/quorum.git
@@ -57,6 +62,7 @@ then
   cd ..
 fi
 
+# Installing constellation
 if [ ! -d "constellation" ]
 then 
   mkdir -p constellation && cd constellation/
@@ -70,12 +76,14 @@ then
   cd ..
 fi
 
+# Installing istanbul-tools
 OLD_GOPATH=$GOPATH
 GOPATH=$PWD/istanbul-tools go get github.com/getamis/istanbul-tools/cmd/istanbul
 echo "PATH=\$PATH:"$PWD/istanbul-tools/bin >> ~/.bashrc
 source ~/.bashrc
 GOPATH=$OLD_GOPATH
 
+# Cloning the QuorumNetworkManager repo
 if [ ! -d "QuorumNetworkManager" ]
 then 
   git clone https://github.com/consensys/QuorumNetworkManager.git
