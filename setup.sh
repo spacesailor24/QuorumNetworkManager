@@ -141,6 +141,7 @@ then
   rm constellation-0.3.2-ubuntu1604.tar.xz
   chmod +x constellation-0.3.2-ubuntu1604/constellation-node
   DETECTED_CONSTELLATION_PATH=$(which constellation-node)
+  sudo ln -s /usr/lib/x86_64-linux-gnu/libsodium.so.23.1.0 /usr/lib/libsodium.so.18
   if [[ $DETECTED_CONSTELLATION_PATH = "" ]]
   then
     echo "PATH=\$PATH:"$PWD/constellation-0.3.2-ubuntu1604 >> ~/.bashrc
