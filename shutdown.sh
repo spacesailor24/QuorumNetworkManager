@@ -1,1 +1,1 @@
-killall -INT geth constellation-node
+killall -s INT geth constellation-node
