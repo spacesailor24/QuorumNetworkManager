@@ -135,7 +135,7 @@ if [[ $CONSTELLATION_PATH = "" ]]
 then
   echo 'Installing Constellation...'
   mkdir -p constellation && cd constellation/
-  sudo apt-get install libdb-dev libleveldb-dev libsodium-dev zlib1g-dev libtinfo-dev
+  sudo apt-get install -y libdb-dev libleveldb-dev libsodium-dev zlib1g-dev libtinfo-dev
   wget https://github.com/jpmorganchase/constellation/releases/download/v0.3.2/constellation-0.3.2-ubuntu1604.tar.xz -O constellation-0.3.2-ubuntu1604.tar.xz
   tar -xf constellation-0.3.2-ubuntu1604.tar.xz
   rm constellation-0.3.2-ubuntu1604.tar.xz
