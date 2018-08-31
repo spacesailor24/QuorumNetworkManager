@@ -98,7 +98,7 @@ else
     git clone https://github.com/jpmorganchase/quorum.git
     cd quorum/
     git fetch --tags
-    git checkout v2.0.2
+    git checkout v2.1.0
     make all
     DETECTED_GETH_PATH=$(which geth)
     if [[ $DETECTED_GETH_PATH = "" ]]
@@ -108,7 +108,7 @@ else
       source ~/.bashrc
     fi
     cd ..
-    echo 'Installed Quorum 2.0.2'
+    echo 'Installed Quorum 2.1.0'
   else
     echo 'Skipped installing Quorum'
   fi
