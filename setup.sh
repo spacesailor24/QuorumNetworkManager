@@ -6,6 +6,11 @@
 sudo apt-get update
 sudo apt-get install -y build-essential libssl-dev git curl
 
+QUORUM_NETWORK_MANAGER_VERSION='0.9.0'
+
+# Expected version numbers
+EXPECTED_GO_VERSION='1.10.3'
+
 # Install NodeJS
 NODEJS_VERSION=$(node --version)
 if [[ $NODEJS_VERSION = "" ]]
@@ -20,10 +25,10 @@ GO_PATH=$(which go)
 if [[ $GO_PATH != "" ]]
 then
   GO_VERSION=$(go version)
-  if [[ $GO_VERSION != 'go version go1.10.3 linux/amd64' ]] && [[ $GO_VERSION != "" ]]
+  if [[ $GO_VERSION != "go version go$EXPECTED_GO_VERSION linux/amd64" ]] && [[ $GO_VERSION != "" ]]
   then
-    echo 'go version other than 1.10.3 detected, please see v0.8.0 release notes'
-    echo 'current:' $GO_VERSION
+    echo "go version other than $EXPECTED_GO_VERSION detected, please see v$QUORUM_NETWORK_MANAGER_VERSION release notes"
+    echo "current: $GO_VERSION"
     echo 'exiting...'
     exit
   fi
@@ -34,10 +39,10 @@ GO_PATH=$(which go)
 if [[ $GO_PATH = "" ]]
 then
   echo 'Installing go...'
-  wget https://storage.googleapis.com/golang/go1.10.3.linux-amd64.tar.gz
-  tar -xf go1.10.3.linux-amd64.tar.gz
+  wget https://storage.googleapis.com/golang/go${EXPECTED_GO_VERSION}.linux-amd64.tar.gz
+  tar -xf go${EXPECTED_GO_VERSION}.linux-amd64.tar.gz
   sudo cp -r go/ /usr/local/
-  rm -rf go/ go1.10.3.linux-amd64.tar.gz
+  rm -rf go/ go${EXPECTED_GO_VERSION}.linux-amd64.tar.gz
   DETECTED_GO_PATH=$(which go)
   if [[ $DETECTED_GO_PATH = "" ]]
   then
@@ -48,7 +53,7 @@ then
     export GOPATH=$HOME/projects/go
     export PATH=$GOPATH/bin:$GOROOT/bin:$PATH
   fi
-  echo 'Installed go version 1.10.3'
+  echo "Installed go version $EXPECTED_GO_VERSION"
 else
   echo 'Skipped installing go'
 fi
