@@ -12,6 +12,7 @@ QUORUM_NETWORK_MANAGER_VERSION='0.9.0'
 EXPECTED_GO_VERSION='1.10.3'
 EXPECTED_QUORUM_COMMIT_HASH='df4267a25637a5497a3db9fbde4603a3dcd6aa14'
 EXPECTED_QUORUM_VERSION='2.0.2'
+EXPECTED_CONSTELLATION_VERSION='0.3.2'
 
 # Install NodeJS
 NODEJS_VERSION=$(node --version)
@@ -127,9 +128,9 @@ CONSTELLATION_PATH=$(which constellation-node)
 if [[ $CONSTELLATION_PATH != "" ]]
 then 
   CONSTELLATION_VERSION=$(constellation-node --version)
-  if [[ $CONSTELLATION_VERSION != 'Constellation Node 0.3.2' ]] && [[ $CONSTELLATION_VERSION != "" ]]
+  if [[ $CONSTELLATION_VERSION != "Constellation Node $EXPECTED_CONSTELLATION_VERSION" ]] && [[ $CONSTELLATION_VERSION != "" ]]
   then
-    echo 'constellation version other than 0.3.2 detected, please see v0.8.0 release notes'
+    echo "constellation version other than $EXPECTED_CONSTELLATION_VERSION detected, please see v$QUORUM_NETWORK_MANAGER_VERSION release notes"
     echo 'current:' $CONSTELLATION_VERSION
     echo 'exiting...'
     exit
@@ -143,20 +144,20 @@ then
   echo 'Installing Constellation...'
   mkdir -p constellation && cd constellation/
   sudo apt-get install -y libdb-dev libleveldb-dev libsodium-dev zlib1g-dev libtinfo-dev
-  wget https://github.com/jpmorganchase/constellation/releases/download/v0.3.2/constellation-0.3.2-ubuntu1604.tar.xz -O constellation-0.3.2-ubuntu1604.tar.xz
-  tar -xf constellation-0.3.2-ubuntu1604.tar.xz
-  rm constellation-0.3.2-ubuntu1604.tar.xz
-  chmod +x constellation-0.3.2-ubuntu1604/constellation-node
+  wget https://github.com/jpmorganchase/constellation/releases/download/v${EXPECTED_CONSTELLATION_VERSION}/constellation-${EXPECTED_CONSTELLATION_VERSION}-ubuntu1604.tar.xz -O constellation-${EXPECTED_CONSTELLATION_VERSION}-ubuntu1604.tar.xz
+  tar -xf constellation-${EXPECTED_CONSTELLATION_VERSION}-ubuntu1604.tar.xz
+  rm constellation-${EXPECTED_CONSTELLATION_VERSION}-ubuntu1604.tar.xz
+  chmod +x constellation-${EXPECTED_CONSTELLATION_VERSION}-ubuntu1604/constellation-node
   DETECTED_CONSTELLATION_PATH=$(which constellation-node)
   sudo ln -s /usr/lib/x86_64-linux-gnu/libsodium.so.23.1.0 /usr/lib/libsodium.so.18
   if [[ $DETECTED_CONSTELLATION_PATH = "" ]]
   then
-    echo "PATH=\$PATH:"$PWD/constellation-0.3.2-ubuntu1604 >> ~/.bashrc
-    export PATH=$PWD/constellation-0.3.2-ubuntu1604:$PATH
+    echo "PATH=\$PATH:"$PWD/constellation-${EXPECTED_CONSTELLATION_VERSION}-ubuntu1604 >> ~/.bashrc
+    export PATH=$PWD/constellation-${EXPECTED_CONSTELLATION_VERSION}-ubuntu1604:$PATH
     source ~/.bashrc
   fi
   cd ..
-  echo 'Installed Constellation 0.3.2'
+  echo "Installed Constellation ${EXPECTED_CONSTELLATION_VERSION}"
 else
   echo 'Skipped installing Constellation'
 fi
