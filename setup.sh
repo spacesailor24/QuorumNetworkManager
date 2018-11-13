@@ -181,7 +181,8 @@ then
   echo 'Cloning and installing QuorumNetworkManager...'
   git clone https://github.com/spacesailor24/QuorumNetworkManager.git
   cd QuorumNetworkManager/
-  git checkout v$QUORUM_NETWORK_MANAGER_VERSION
+  # git checkout v$QUORUM_NETWORK_MANAGER_VERSION
+  git checkout debugging-quorum-upgrade
   npm install
   echo "Cloned and installed QuorumNetworkManager v$QUORUM_NETWORK_MANAGER_VERSION"
 else
