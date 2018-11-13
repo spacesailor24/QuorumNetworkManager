@@ -106,6 +106,8 @@ function createWeb3IPC(ipcProvider){
 }
 
 function waitForRPCConnection(web3RPC, cb){
+  console.log('INSIDE waitForRPCConnection');
+  console.log('WEB3RPC', web3RPC);
   web3RPC.eth.net.isListening(function(err, isListening){
     if(isListening === true){
       console.log('[*] RPC connection established')
@@ -121,6 +123,7 @@ function waitForRPCConnection(web3RPC, cb){
 
 // TODO: add error handler here for web3 connections so that program doesn't exit on error
 function createWeb3Connection(result, cb){
+  console.log('INSIDE createWeb3Connection');
   let ipcProvider = result.web3IPCHost;
   waitForIPCPath(ipcProvider, function(){
     // Web3 WS RPC
@@ -136,6 +139,7 @@ function createWeb3Connection(result, cb){
     let Web3HttpRPC = require('web3');
     let web3HttpRPC = new Web3HttpRPC(httpProvider);
     result.web3HttpRPC = web3HttpRPC
+      console.log('BEFORE waitForRPCConnection');
       console.log('THIS', result.web3HttpRPC);
     waitForRPCConnection(result.web3HttpRPC, function(){
       result.web3IPC = createWeb3IPC(ipcProvider)
