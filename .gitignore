@@ -71,3 +71,6 @@ test/node*
 # Constellation files
 tls-known-clients
 tls-known-servers
+
+# IDE related files
+.idea/
