@@ -136,6 +136,7 @@ function createWeb3Connection(result, cb){
     let Web3HttpRPC = require('web3');
     let web3HttpRPC = new Web3HttpRPC(httpProvider);
     result.web3HttpRPC = web3HttpRPC
+      console.log('THIS', result.web3HttpRPC);
     waitForRPCConnection(result.web3HttpRPC, function(){
       result.web3IPC = createWeb3IPC(ipcProvider)
       if(result.consensus === 'raft'){
