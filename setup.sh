@@ -10,6 +10,8 @@ QUORUM_NETWORK_MANAGER_VERSION='0.9.0'
 
 # Expected version numbers
 EXPECTED_GO_VERSION='1.10.3'
+EXPECTED_QUORUM_COMMIT_HASH='0d0c507a5945ab63c8441007f022a143e2418f1e'
+EXPECTED_QUORUM_VERSION='2.1.1'
 
 # Install NodeJS
 NODEJS_VERSION=$(node --version)
@@ -71,7 +73,7 @@ then
     fi
   fi
   QUORUM_COMMIT=$(geth version | sed -n '3,3p' | sed 's/ /\n/g' | tail -1)
-  if [[ $QUORUM_COMMIT != "df4267a25637a5497a3db9fbde4603a3dcd6aa14" ]] # incorrect version of quorum detected
+  if [[ $QUORUM_COMMIT != $EXPECTED_QUORUM_COMMIT_HASH ]] # incorrect version of quorum detected
   then
     if [ -d "quorum" ]
     then
@@ -82,16 +84,16 @@ then
         echo 'Updating Quorum...'
         cd quorum/
         git fetch --tags
-        git checkout v2.0.2
+        git checkout v$EXPECTED_QUORUM_VERSION
         make all
-        echo 'Updated Quorum to 2.0.2'
+        echo "Updated Quorum to $EXPECTED_QUORUM_VERSION"
         cd ..
       else
-        echo 'Skipping Quorum update: Detected quorum not installed in' $QUORUM_TARGET_DIR '- human intervention required'
+        echo "Skipping Quorum update: Detected quorum not installed in $QUORUM_TARGET_DIR - human intervention required"
       fi
     else
-      echo 'Quorum version other than 2.0.2 detected and/or installed in unknown location - human intervention required'
-      echo 'Current:' $QUORUM_COMMIT
+      echo "Quorum version other than $EXPECTED_QUORUM_VERSION detected and/or installed in unknown location - human intervention required"
+      echo "Current: $QUORUM_COMMIT"
       echo 'Exiting...'
       exit
     fi
@@ -103,7 +105,7 @@ else
     git clone https://github.com/jpmorganchase/quorum.git
     cd quorum/
     git fetch --tags
-    git checkout v2.0.2
+    git checkout v$EXPECTED_QUORUM_VERSION
     make all
     DETECTED_GETH_PATH=$(which geth)
     if [[ $DETECTED_GETH_PATH = "" ]]
@@ -113,7 +115,7 @@ else
       source ~/.bashrc
     fi
     cd ..
-    echo 'Installed Quorum 2.0.2'
+    echo "Installed Quorum $EXPECTED_QUORUM_VERSION"
   else
     echo 'Skipped installing Quorum'
   fi
