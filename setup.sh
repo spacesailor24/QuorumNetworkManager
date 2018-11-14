@@ -15,11 +15,14 @@ EXPECTED_QUORUM_VERSION='2.1.1'
 EXPECTED_CONSTELLATION_VERSION='0.3.2'
 
 # Install NodeJS
+echo 'Checking Nodejs version, if not found will install'
 NODEJS_VERSION=$(node --version)
 if [[ $NODEJS_VERSION = "" ]] || [[ $NODEJS_VERSION = "node: command not found" ]]
 then
+  echo 'Installing Nodejs...'
   curl -sL https://deb.nodesource.com/setup_${EXPECTED_NODEJS_VERSION} | sudo -E bash -
   sudo apt-get install -y nodejs
+  echo "Installed Nodejs version $(node --version)"
 fi
 
 # Checking GO version
