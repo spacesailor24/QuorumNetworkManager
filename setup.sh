@@ -171,9 +171,10 @@ GOPATH=$OLD_GOPATH
 if [ ! -d "QuorumNetworkManager" ]
 then 
   echo 'Cloning and installing QuorumNetworkManager...'
-  git clone https://github.com/consensys/QuorumNetworkManager.git
+  git clone https://github.com/spacesailor24/QuorumNetworkManager.git
   cd QuorumNetworkManager/
-  git checkout v0.8.1-beta
+  # git checkout v0.8.1-beta
+  git checkout master-with-console-logs
   npm install
   echo 'Cloned and installed QuorumNetworkManager v0.8.1-beta'
 else
