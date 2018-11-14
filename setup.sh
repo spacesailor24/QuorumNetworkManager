@@ -16,7 +16,7 @@ EXPECTED_CONSTELLATION_VERSION='0.3.2'
 
 # Install NodeJS
 NODEJS_VERSION=$(node --version)
-if [[ $NODEJS_VERSION = "" ]]
+if [[ $NODEJS_VERSION = "" ]] || [[ $NODEJS_VERSION = "node: command not found" ]]
 then
   curl -sL https://deb.nodesource.com/setup_${EXPECTED_NODEJS_VERSION} | sudo -E bash -
   sudo apt-get install -y nodejs
