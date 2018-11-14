@@ -121,6 +121,7 @@ function waitForRPCConnection(web3RPC, cb){
 
 // TODO: add error handler here for web3 connections so that program doesn't exit on error
 function createWeb3Connection(result, cb){
+  console.log('result.web3IPCHost', result.web3IPCHost);
   let ipcProvider = result.web3IPCHost;
   waitForIPCPath(ipcProvider, function(){
     // Web3 WS RPC
@@ -136,8 +137,6 @@ function createWeb3Connection(result, cb){
     let Web3HttpRPC = require('web3');
     let web3HttpRPC = new Web3HttpRPC(httpProvider);
     result.web3HttpRPC = web3HttpRPC
-      console.log('BEFORE waitForRPCConnection');
-      console.log('THIS', result.web3HttpRPC);
     waitForRPCConnection(result.web3HttpRPC, function(){
       result.web3IPC = createWeb3IPC(ipcProvider)
       if(result.consensus === 'raft'){

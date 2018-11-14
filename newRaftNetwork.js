@@ -62,6 +62,8 @@ function startNewRaftNetwork(config, cb){
     consensus: 'raft'
   }
 
+  console.log('nodeConfig', nodeConfig);
+
   let seqFunction = async.seq(
     util.handleExistingFiles,
     util.generateEnode,
