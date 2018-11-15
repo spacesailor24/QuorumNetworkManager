@@ -1,16 +1,16 @@
 #!/bin/bash
 
 #TODO: Add version check for nodejs as well
-#TODO: extract versions to variables
 
 sudo apt-get update
 sudo apt-get install -y build-essential libssl-dev git curl
 
 QUORUM_NETWORK_MANAGER_VERSION='0.8.1-beta'
 
-# Expected version numbers
+# Expected versions
 EXPECTED_NODEJS_VERSION='8.x'
 EXPECTED_GO_VERSION='1.10.3'
+EXPECTED_GO_BUILD='linux/amd64'
 EXPECTED_QUORUM_COMMIT_HASH='df4267a25637a5497a3db9fbde4603a3dcd6aa14'
 EXPECTED_QUORUM_VERSION='2.0.2'
 EXPECTED_CONSTELLATION_VERSION='0.3.2'
@@ -29,7 +29,7 @@ GO_PATH=$(which go)
 if [[ $GO_PATH != "" ]]
 then
   GO_VERSION=$(go version)
-  if [[ $GO_VERSION != "go version go$EXPECTED_GO_VERSION linux/amd64" ]] && [[ $GO_VERSION != "" ]]
+  if [[ $GO_VERSION != "go version go$EXPECTED_GO_VERSION $EXPECTED_GO_BUILD" ]] && [[ $GO_VERSION != "" ]]
   then
     echo "go version other than $EXPECTED_GO_VERSION detected, please see v$QUORUM_NETWORK_MANAGER_VERSION release notes"
     echo "current: $GO_VERSION"
@@ -43,10 +43,10 @@ GO_PATH=$(which go)
 if [[ $GO_PATH = "" ]]
 then
   echo 'Installing go...'
-  wget https://storage.googleapis.com/golang/go${EXPECTED_GO_VERSION}.linux-amd64.tar.gz
-  tar -xf go${EXPECTED_GO_VERSION}.linux-amd64.tar.gz
+  wget https://storage.googleapis.com/golang/go${EXPECTED_GO_VERSION}.${EXPECTED_GO_BUILD}.tar.gz
+  tar -xf go${EXPECTED_GO_VERSION}.${EXPECTED_GO_BUILD}.tar.gz
   sudo cp -r go/ /usr/local/
-  rm -rf go/ go${EXPECTED_GO_VERSION}.linux-amd64.tar.gz
+  rm -rf go/ go${EXPECTED_GO_VERSION}.${EXPECTED_GO_BUILD}.tar.gz
   DETECTED_GO_PATH=$(which go)
   if [[ $DETECTED_GO_PATH = "" ]]
   then
@@ -182,9 +182,9 @@ then
   echo 'Cloning and installing QuorumNetworkManager...'
   git clone https://github.com/consensys/QuorumNetworkManager.git
   cd QuorumNetworkManager/
-  git checkout v0.8.1-beta
+  git checkout v${QUORUM_NETWORK_MANAGER_VERSION}
   npm install
-  echo 'Cloned and installed QuorumNetworkManager v0.8.1-beta'
+  echo "Cloned and installed QuorumNetworkManager v$QUORUM_NETWORK_MANAGER_VERSION"
 else
   echo 'Skipped cloning and installing QuorumNetworkManager'
 fi
