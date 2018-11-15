@@ -9,6 +9,7 @@ sudo apt-get install -y build-essential libssl-dev git curl
 QUORUM_NETWORK_MANAGER_VERSION='0.9.0'
 
 # Expected version numbers
+EXPECTED_NODEJS_VERSION='8.x'
 EXPECTED_GO_VERSION='1.10.3'
 EXPECTED_QUORUM_COMMIT_HASH='df4267a25637a5497a3db9fbde4603a3dcd6aa14'
 EXPECTED_QUORUM_VERSION='2.0.2'
@@ -18,7 +19,7 @@ EXPECTED_CONSTELLATION_VERSION='0.3.2'
 NODEJS_VERSION=$(node --version)
 if [[ $NODEJS_VERSION = "" ]]
 then
-  curl -sL https://deb.nodesource.com/setup_8.x | sudo -E bash -
+  curl -sL https://deb.nodesource.com/setup_${EXPECTED_NODEJS_VERSION} | sudo -E bash -
   sudo apt-get install -y nodejs
 fi
 
