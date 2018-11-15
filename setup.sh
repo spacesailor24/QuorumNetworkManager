@@ -42,7 +42,7 @@ GO_PATH=$(which go)
 if [[ $GO_PATH = "" ]]
 then
   echo 'Installing go...'
-  wget https://storage.googleapis.com/golang/go${EXPECTED_GO_VERSION}.${EXPECTED_GO_BUILD}.tar.gz
+  wget https://storage.googleapis.com/golang/go${EXPECTED_GO_VERSION}.linux-amd64.tar.gz
   tar -xf go${EXPECTED_GO_VERSION}.linux-amd64.tar.gz
   sudo cp -r go/ /usr/local/
   rm -rf go/ go${EXPECTED_GO_VERSION}.linux-amd64.tar.gz
