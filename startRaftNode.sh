@@ -8,7 +8,8 @@ nohup constellation-node constellation.config &> constellation.log &
 
 sleep 5
 
-FLAGS="--networkid 1337 --datadir Blockchain --targetgaslimit $1 --shh --port $2 --unlock 0 --password passwords.txt --raft"
+NET_ID=$(awk -v min=10000 -v max=99999 -v freq=1 'BEGIN{srand(); for(i=0;i<freq;i++)print int(min+rand()*(max-min+1))}')
+FLAGS="--networkid $NET_ID --datadir Blockchain --targetgaslimit $1 --shh --port $2 --unlock 0 --password passwords.txt --raft"
 
 RPC_API="admin,db,eth,debug,miner,net,shh,txpool,personal,web3,quorum,raft"
 HTTP_RPC_ARGS="--rpc --rpcaddr 0.0.0.0 --rpcport $3 --rpcapi $RPC_API"
