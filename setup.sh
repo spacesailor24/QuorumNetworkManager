@@ -10,7 +10,6 @@ QUORUM_NETWORK_MANAGER_VERSION='0.8.1-beta'
 # Expected versions
 EXPECTED_NODEJS_VERSION='8.x'
 EXPECTED_GO_VERSION='1.10.3'
-EXPECTED_GO_BUILD='linux/amd64'
 EXPECTED_QUORUM_COMMIT_HASH='df4267a25637a5497a3db9fbde4603a3dcd6aa14'
 EXPECTED_QUORUM_VERSION='2.1.1'
 EXPECTED_CONSTELLATION_VERSION='0.3.2'
@@ -32,7 +31,7 @@ GO_PATH=$(which go)
 if [[ $GO_PATH != "" ]]
 then
   GO_VERSION=$(go version)
-  if [[ $GO_VERSION != "go version go$EXPECTED_GO_VERSION $EXPECTED_GO_BUILD" ]] && [[ $GO_VERSION != "" ]]
+  if [[ $GO_VERSION != "go version go$EXPECTED_GO_VERSION linux/amd64" ]] && [[ $GO_VERSION != "" ]]
   then
     echo "go version other than $EXPECTED_GO_VERSION detected, please see v$QUORUM_NETWORK_MANAGER_VERSION release notes"
     echo "current: $GO_VERSION"
@@ -46,10 +45,10 @@ GO_PATH=$(which go)
 if [[ $GO_PATH = "" ]]
 then
   echo 'Installing go...'
-  wget https://storage.googleapis.com/golang/go${EXPECTED_GO_VERSION}.${EXPECTED_GO_BUILD}.tar.gz
-  tar -xf go${EXPECTED_GO_VERSION}.${EXPECTED_GO_BUILD}.tar.gz
+  wget https://storage.googleapis.com/golang/go${EXPECTED_GO_VERSION}.linux-amd64.tar.gz
+  tar -xf go${EXPECTED_GO_VERSION}.linux-amd64.tar.gz
   sudo cp -r go/ /usr/local/
-  rm -rf go/ go${EXPECTED_GO_VERSION}.${EXPECTED_GO_BUILD}.tar.gz
+  rm -rf go/ go${EXPECTED_GO_VERSION}.linux-amd64.tar.gz
   DETECTED_GO_PATH=$(which go)
   if [[ $DETECTED_GO_PATH = "" ]]
   then
