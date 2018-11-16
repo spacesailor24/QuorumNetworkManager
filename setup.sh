@@ -75,7 +75,7 @@ then
   QUORUM_COMMIT=$(geth version | sed -n '3,3p' | sed 's/ /\n/g' | tail -1)
   if [[ $QUORUM_COMMIT != $EXPECTED_QUORUM_COMMIT_HASH ]] # incorrect version of quorum detected
   then
-    if [ -d "quorum" ]
+    if [[ -d "quorum" ]]
     then
       QUORUM_INSTALLED_DIR=${GETH_PATH%/build/bin/geth}
       QUORUM_TARGET_DIR=$(readlink -f quorum)
@@ -99,7 +99,7 @@ then
     fi
   fi
 else
-  if [ ! -d "quorum" ]
+  if [[ ! -d "quorum" ]]
   then
     echo 'Installing Quorum...'
     git clone https://github.com/jpmorganchase/quorum.git
@@ -175,7 +175,7 @@ fi
 GOPATH=$OLD_GOPATH
 
 # Cloning the QuorumNetworkManager repo
-if [ ! -d "QuorumNetworkManager" ]
+if [[ ! -d "QuorumNetworkManager" ]]
 then 
   echo 'Cloning and installing QuorumNetworkManager...'
   git clone https://github.com/consensys/QuorumNetworkManager.git
