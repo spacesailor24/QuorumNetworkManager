@@ -5,9 +5,8 @@
 sudo apt-get update
 sudo apt-get install -y build-essential libssl-dev git curl
 
-QUORUM_NETWORK_MANAGER_VERSION='0.8.1-beta'
-
 # Expected versions
+QUORUM_NETWORK_MANAGER_VERSION='0.8.1-beta'
 EXPECTED_NODEJS_VERSION='8.x'
 EXPECTED_GO_VERSION='1.10.3'
 EXPECTED_QUORUM_COMMIT_HASH='df4267a25637a5497a3db9fbde4603a3dcd6aa14'
